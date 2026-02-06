@@ -11,7 +11,7 @@ export async function generateProposalAction(context: string) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', generationConfig: { responseMimeType: "application/json" } });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest', generationConfig: { responseMimeType: "application/json" } });
 
     const prompt = `
     Você é um Arquiteto de Soluções e Especialista em Vendas B2B.
