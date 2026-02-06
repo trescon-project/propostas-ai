@@ -102,12 +102,19 @@ export async function generateProposalAction(context: string) {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
+    console.log("Gemini Raw Response:", text);
+
+    // Clean up markdown code blocks if present
+    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
 
     // Parse JSON safely
-    const data = JSON.parse(text);
+    const data = JSON.parse(cleanText);
     return data;
   } catch (error) {
     console.error('Gemini API Error:', error);
-    throw new Error('Failed to generate proposal');
+    if (error instanceof Error) {
+      throw new Error(`AI Generation Failed: ${error.message}`);
+    }
+    throw new Error('AI Generation Failed: Unknown error');
   }
 }

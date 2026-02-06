@@ -37,7 +37,8 @@ export default function EditorPage() {
             }
         } catch (error) {
             console.error("Error generating proposal:", error);
-            alert("Erro ao gerar proposta. Verifique o console.");
+            const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
+            alert(`Erro ao gerar proposta: ${errorMessage}. Verifique o console para mais detalhes.`);
         } finally {
             setIsGenerating(false);
         }
