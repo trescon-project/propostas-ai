@@ -27,13 +27,15 @@ export default function EditorPage() {
     const [isExporting, setIsExporting] = useState(false);
 
     const handleGenerate = async () => {
-        // ... (existing logic)
         if (!data.aiContext) return;
         setIsGenerating(true);
         try {
             const result = await generateProposalAction(data.aiContext);
-            if (result) {
-                updateData({ slides: result });
+
+            if (result.success && result.data) {
+                updateData({ slides: result.data });
+            } else {
+                throw new Error(result.error || 'Falha ao gerar dados');
             }
         } catch (error) {
             console.error("Error generating proposal:", error);
