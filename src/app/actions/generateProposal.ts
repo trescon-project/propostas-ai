@@ -2,16 +2,18 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
 export async function generateProposalAction(context: string) {
-  if (!process.env.GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY is not set');
-  }
+  try {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error('GEMINI_API_KEY is not set');
+      return { success: false, error: 'Chave de API (GEMINI_API_KEY) não configurada no servidor.' };
+    }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', generationConfig: { responseMimeType: "application/json" } });
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', generationConfig: { responseMimeType: "application/json" } });
 
-  const prompt = `
+    const prompt = `
     Você é um Arquiteto de Soluções e Especialista em Vendas B2B.
     Seu objetivo é gerar o conteúdo de uma proposta comercial de alto impacto baseada no seguinte contexto do cliente:
 
@@ -38,7 +40,6 @@ export async function generateProposalAction(context: string) {
            { "title": "Destaque 1", "description": "Breve detalhe" },
            { "title": "Destaque 2", "description": "Breve detalhe" }
         ]
-      },
       },
       "pricing": {
         "totalValue": "Valor estimado (ex: R$ 150.000,00)",
@@ -98,7 +99,6 @@ export async function generateProposalAction(context: string) {
     }
   `;
 
-  try {
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
@@ -109,12 +109,11 @@ export async function generateProposalAction(context: string) {
 
     // Parse JSON safely
     const data = JSON.parse(cleanText);
-    return data;
+    return { success: true, data };
+
   } catch (error) {
     console.error('Gemini API Error:', error);
-    if (error instanceof Error) {
-      throw new Error(`AI Generation Failed: ${error.message}`);
-    }
-    throw new Error('AI Generation Failed: Unknown error');
+    const errorMessage = error instanceof Error ? error.message : 'Unknown server error';
+    return { success: false, error: errorMessage };
   }
 }
