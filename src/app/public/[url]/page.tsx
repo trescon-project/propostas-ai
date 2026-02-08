@@ -22,7 +22,8 @@ export default async function PublicPage({ params }: { params: Promise<{ url: st
             title: proposal.title,
             companyName: proposal.company_name,
             customUrl: proposal.custom_url,
-            date: proposal.date
+            date: proposal.date,
+            status: proposal.status
         },
         slides: proposal.content as any,
         aiContext: proposal.ai_context || ''
