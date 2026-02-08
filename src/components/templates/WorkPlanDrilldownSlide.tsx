@@ -5,17 +5,29 @@ import {
     Description,
     KeyboardArrowRight
 } from '@mui/icons-material';
-import { WEEKS_DETAIL } from '@/data/weeks';
-
-// Derive the type from the data
-type WeekDetail = typeof WEEKS_DETAIL[0];
+import { useProposal } from '@/contexts/ProposalContext';
+import EditableText from '@/components/ui/EditableText';
 
 interface WorkPlanDrilldownSlideProps {
     className?: string;
-    week: WeekDetail;
+    week: any;
+    editable?: boolean;
 }
 
-export default function WorkPlanDrilldownSlide({ className, week }: WorkPlanDrilldownSlideProps) {
+export default function WorkPlanDrilldownSlide({
+    className,
+    week,
+    editable = false
+}: WorkPlanDrilldownSlideProps) {
+    const { data, updateSlideData } = useProposal();
+
+    const handleUpdateWeek = (updates: Partial<typeof week>) => {
+        const newWeeklyDetails = data.slides.weeklyDetails.map((w: any) =>
+            w.id === week.id ? { ...w, ...updates } : w
+        );
+        updateSlideData('weeklyDetails', newWeeklyDetails);
+    };
+
     return (
         <div className={`relative w-full h-full overflow-hidden font-poppins bg-[#000528] ${className}`}>
             {/* Background Image */}
@@ -31,12 +43,20 @@ export default function WorkPlanDrilldownSlide({ className, week }: WorkPlanDril
                         {/* Header (Figma: top 71px) */}
                         <div className="flex justify-between items-center w-full max-w-[1124px] mx-auto animate-slideDown mb-6 shrink-0 relative z-30">
                             <div className="flex flex-col gap-1 text-white">
-                                <h2 className="text-[32px] md:text-[56px] font-bold leading-tight md:leading-[60px]">
-                                    {week.title}
-                                </h2>
-                                <p className="text-[14px] md:text-[16px] text-gray-200 leading-relaxed md:leading-[28px]">
-                                    {week.subtitle}
-                                </p>
+                                <EditableText
+                                    tagName="h2"
+                                    value={week.title}
+                                    onChange={(val) => handleUpdateWeek({ title: val })}
+                                    className="text-[32px] md:text-[56px] font-bold leading-tight md:leading-[60px] border-b border-white/10"
+                                    editable={editable}
+                                />
+                                <EditableText
+                                    tagName="p"
+                                    value={week.subtitle}
+                                    onChange={(val) => handleUpdateWeek({ subtitle: val })}
+                                    className="text-[14px] md:text-[16px] text-gray-200 leading-relaxed md:leading-[28px] border-b border-white/10"
+                                    editable={editable}
+                                />
                             </div>
                             <div className="hidden md:block px-8 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/10 shrink-0">
                                 <span className="text-[20px] font-extrabold text-white tracking-wider uppercase">
@@ -63,10 +83,19 @@ export default function WorkPlanDrilldownSlide({ className, week }: WorkPlanDril
                                     </div>
                                     {/* List */}
                                     <ul className="flex flex-col gap-3">
-                                        {week.actions.map((action, i) => (
+                                        {(week.actions || []).map((action: string, i: number) => (
                                             <li key={i} className="flex items-start gap-3 relative">
                                                 <KeyboardArrowRight className="text-[#ac12e1] text-[28px] shrink-0 -mt-[1px] -ml-[8px]" />
-                                                <span className="text-white text-[18px] leading-[26px] font-normal break-words max-w-full">{action}</span>
+                                                <EditableText
+                                                    value={action}
+                                                    onChange={(val) => {
+                                                        const newActions = [...week.actions];
+                                                        newActions[i] = val;
+                                                        handleUpdateWeek({ actions: newActions });
+                                                    }}
+                                                    className="text-white text-[18px] leading-[26px] font-normal border-b border-white/10 w-full"
+                                                    editable={editable}
+                                                />
                                             </li>
                                         ))}
                                     </ul>
@@ -83,9 +112,16 @@ export default function WorkPlanDrilldownSlide({ className, week }: WorkPlanDril
                                     </div>
                                     <div className="flex items-start gap-4 pl-1">
                                         <div className="w-2.5 h-2.5 rounded-full bg-[#ac12e1] mt-2.5 shrink-0" />
-                                        <span className="text-white text-[18px] leading-[26px] font-normal break-words max-w-full">
-                                            {week.deliverables[0]}
-                                        </span>
+                                        <EditableText
+                                            value={week.deliverables?.[0] || ''}
+                                            onChange={(val) => {
+                                                const newDeliverables = [...(week.deliverables || [])];
+                                                newDeliverables[0] = val;
+                                                handleUpdateWeek({ deliverables: newDeliverables });
+                                            }}
+                                            className="text-white text-[18px] leading-[26px] font-normal border-b border-white/10 w-full"
+                                            editable={editable}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -101,11 +137,20 @@ export default function WorkPlanDrilldownSlide({ className, week }: WorkPlanDril
                                     }}>
                                     <h3 className="text-[28px] font-bold text-white text-center mb-2">3CON</h3>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {week.team3con.map((role, i) => {
-                                            const isLastOdd = i === week.team3con.length - 1 && week.team3con.length % 2 !== 0;
+                                        {(week.team3con || []).map((role: string, i: number) => {
+                                            const isLastOdd = i === (week.team3con || []).length - 1 && (week.team3con || []).length % 2 !== 0;
                                             return (
                                                 <div key={i} className={`flex items-center justify-center h-[42px] px-[16px] pt-[9px] pb-1 rounded-[12px] bg-white/5 border border-white/10 ${isLastOdd ? 'col-span-2' : ''}`}>
-                                                    <span className="text-[#cad5e2] text-[16px] leading-[20px] text-center whitespace-nowrap overflow-hidden text-ellipsis max-w-full">{role}</span>
+                                                    <EditableText
+                                                        value={role}
+                                                        onChange={(val) => {
+                                                            const newTeam = [...(week.team3con || [])];
+                                                            newTeam[i] = val;
+                                                            handleUpdateWeek({ team3con: newTeam });
+                                                        }}
+                                                        className="text-[#cad5e2] text-[16px] leading-[20px] text-center w-full"
+                                                        editable={editable}
+                                                    />
                                                 </div>
                                             )
                                         })}
@@ -118,11 +163,20 @@ export default function WorkPlanDrilldownSlide({ className, week }: WorkPlanDril
                                         background: 'linear-gradient(164deg, rgba(172, 18, 225, 0.1) 0%, rgba(152, 16, 250, 0.1) 100%)',
                                         border: '1px solid rgba(172, 18, 225, 0.2)'
                                     }}>
-                                    <h3 className="text-[28px] font-bold text-white text-center mb-2">Tegma</h3>
+                                    <h3 className="text-[28px] font-bold text-white text-center mb-2">Cliente</h3>
                                     <div className="grid grid-cols-2 gap-3">
-                                        {week.teamClient.map((role, i) => (
+                                        {(week.teamClient || []).map((role: string, i: number) => (
                                             <div key={i} className="flex items-center justify-center h-[42px] px-[16px] pt-[9px] pb-1 rounded-[12px] bg-white/5 border border-white/10">
-                                                <span className="text-[#cad5e2] text-[16px] leading-[20px] text-center whitespace-nowrap overflow-hidden text-ellipsis max-w-full">{role}</span>
+                                                <EditableText
+                                                    value={role}
+                                                    onChange={(val) => {
+                                                        const newTeam = [...(week.teamClient || [])];
+                                                        newTeam[i] = val;
+                                                        handleUpdateWeek({ teamClient: newTeam });
+                                                    }}
+                                                    className="text-[#cad5e2] text-[16px] leading-[20px] text-center w-full"
+                                                    editable={editable}
+                                                />
                                             </div>
                                         ))}
                                     </div>

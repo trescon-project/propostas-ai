@@ -11,7 +11,7 @@ export async function generateProposalAction(context: string) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-001', generationConfig: { responseMimeType: "application/json" } });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', generationConfig: { responseMimeType: "application/json" } });
 
     const prompt = `
     Você é um Arquiteto de Soluções e Especialista em Vendas B2B.
@@ -27,11 +27,13 @@ export async function generateProposalAction(context: string) {
     {
       "home": {
         "title": "Título curto e impactante da proposta",
-        "subtitle": "Subtítulo focado em valor"
+        "subtitle": "Subtítulo focado em valor",
+        "date": "Data no formato DD/MM/YYYY"
       },
       "challenge": {
         "title": "Título do Slide de Desafio (ex: O Cenário Atual)",
-        "description": "Descrição concisa do problema/dor do cliente (max 30 palavras para caber no slide)."
+        "description": "Descrição concisa do problema/dor do cliente (max 30 palavras para caber no slide).",
+        "points": ["Causa de dor ou ineficiência 1", "Causa de dor ou ineficiência 2", "Causa de dor ou ineficiência 3"]
       },
       "solution": {
         "title": "Título da Solução (ex: Arquitetura Cloud Native)",

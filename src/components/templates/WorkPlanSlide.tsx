@@ -28,18 +28,21 @@ const WEEKS = [
     { label: 'SEMANA 6', date: '09/03/2026 - 13/03/2026' }
 ];
 
+import { useProposal } from '@/contexts/ProposalContext';
+import EditableText from '@/components/ui/EditableText';
+
 interface WorkPlanSlideProps {
     className?: string;
+    editable?: boolean;
 }
 
-import { useProposal } from '@/contexts/ProposalContext';
-
-// ... (keep imports)
-
-export default function WorkPlanSlide({ className }: WorkPlanSlideProps) {
+export default function WorkPlanSlide({
+    className,
+    editable = false
+}: WorkPlanSlideProps) {
     const swiperSlide = useSwiperSlide();
     const isActive = swiperSlide ? swiperSlide.isActive : true;
-    const { data } = useProposal();
+    const { data, updateSlideData } = useProposal();
     const { workPlan } = data.slides;
 
     return (
@@ -47,14 +50,20 @@ export default function WorkPlanSlide({ className }: WorkPlanSlideProps) {
             className={`relative w-full h-full overflow-hidden font-poppins ${className}`}
             style={{ background: '#000528' }}
         >
-            {/* ... (keep background) */}
+            {/* ... background could go here if needed ... */}
 
             {/* Main Container */}
             <div className="absolute inset-0 flex flex-col items-center justify-center p-8 z-20">
 
                 {/* Title */}
                 <div className={`mb-12 ${isActive ? "animate-slideDown" : "opacity-0"}`}>
-                    <Titulo text={workPlan.title || "Plano de Trabalho"} />
+                    <EditableText
+                        tagName="h1"
+                        value={workPlan.title || "Plano de Trabalho"}
+                        onChange={(val) => updateSlideData('workPlan', { title: val })}
+                        className="text-[6vh] font-bold text-white border-b border-white/10"
+                        editable={editable}
+                    />
                 </div>
 
                 {/* Timeline Container */}
@@ -72,7 +81,7 @@ export default function WorkPlanSlide({ className }: WorkPlanSlideProps) {
 
                             {/* Weeks Grid */}
                             <div className="grid grid-cols-6 relative">
-                                {workPlan.weeks.map((week, i) => (
+                                {(workPlan.weeks || []).map((week, i) => (
                                     <div key={i} className="flex flex-col items-center relative">
                                         {/* Week Label & Date */}
                                         <div
@@ -80,7 +89,16 @@ export default function WorkPlanSlide({ className }: WorkPlanSlideProps) {
                                             style={isActive ? { animationDelay: `${0.9 + (i * 0.1)}s`, animationFillMode: 'forwards' } : {}}
                                         >
                                             <WeekLabel label={week.label} />
-                                            <span className="text-[1.2vh] text-gray-400 font-light tracking-wide">{week.date}</span>
+                                            <EditableText
+                                                value={week.date}
+                                                onChange={(val) => {
+                                                    const newWeeks = [...workPlan.weeks];
+                                                    newWeeks[i] = { ...newWeeks[i], date: val };
+                                                    updateSlideData('workPlan', { weeks: newWeeks });
+                                                }}
+                                                className="text-[1.2vh] text-gray-400 font-light tracking-wide border-b border-white/10"
+                                                editable={editable}
+                                            />
                                         </div>
 
                                         {/* Dot */}
@@ -104,7 +122,7 @@ export default function WorkPlanSlide({ className }: WorkPlanSlideProps) {
                                 ))}
                             </div>
 
-                            {workPlan.phases.map((phase: any, index: number) => {
+                            {(workPlan.phases || []).map((phase: any, index: number) => {
                                 const variant: TagVariant = phase.color === 'purple' ? 'Roxo' : 'Azul';
 
                                 // Calculation for positioning
@@ -113,7 +131,7 @@ export default function WorkPlanSlide({ className }: WorkPlanSlideProps) {
 
                                 return (
                                     <div
-                                        key={phase.label}
+                                        key={index}
                                         className={`relative h-[41px] flex items-center ${isActive ? "animate-growRight opacity-0" : "opacity-0"} origin-left`}
                                         style={{
                                             left: left,
@@ -122,18 +140,33 @@ export default function WorkPlanSlide({ className }: WorkPlanSlideProps) {
                                             animationFillMode: 'forwards'
                                         }}
                                     >
-                                        <Tags
-                                            label={phase.label}
-                                            variant={variant}
-                                            className="w-full h-full shadow-lg"
-                                        />
+                                        <div className="w-full h-full relative group/phase">
+                                            <Tags
+                                                label={phase.label}
+                                                variant={variant}
+                                                className="w-full h-full shadow-lg"
+                                            />
+                                            {editable && (
+                                                <div className="absolute inset-0 opacity-0 group-hover/phase:opacity-100 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-lg transition-opacity">
+                                                    <EditableText
+                                                        value={phase.label}
+                                                        onChange={(val) => {
+                                                            const newPhases = [...workPlan.phases];
+                                                            newPhases[index] = { ...newPhases[index], label: val };
+                                                            updateSlideData('workPlan', { phases: newPhases });
+                                                        }}
+                                                        className="text-white text-xs font-bold"
+                                                        editable={editable}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 );
                             })}
                         </div>
                     </div>
                 </GlassBox>
-
             </div>
         </div>
     );
