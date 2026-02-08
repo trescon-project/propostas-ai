@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useProposal } from '@/contexts/ProposalContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Mousewheel, Pagination } from 'swiper/modules';
@@ -25,7 +25,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
-export default function EditorPage() {
+function EditorContent() {
     const { data, updateMeta, setAiContext, updateData } = useProposal();
     const [isGenerating, setIsGenerating] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
@@ -348,5 +348,13 @@ export default function EditorPage() {
                 </Swiper>
             </div>
         </div>
+    );
+}
+
+export default function EditorPage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen w-full items-center justify-center bg-[#000528] text-white">Carregando editor...</div>}>
+            <EditorContent />
+        </Suspense>
     );
 }
