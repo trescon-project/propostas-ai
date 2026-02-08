@@ -8,6 +8,8 @@ export interface ProposalData {
         title: string;
         customUrl: string;
         companyName: string;
+        date: string;
+        status: string;
     };
     slides: {
         home: {
@@ -57,6 +59,8 @@ const defaultProposalData: ProposalData = {
         title: 'Transformação Digital 2024',
         customUrl: 'transformacao-digital',
         companyName: 'Acme Corp',
+        date: '08/02/2026',
+        status: 'rascunho',
     },
     slides: {
         home: {
@@ -132,12 +136,21 @@ interface ProposalContextType {
     updateSlideData: (slideKey: keyof ProposalData['slides'], newData: any) => void;
     updateMeta: (key: keyof ProposalData['meta'], value: string) => void;
     setAiContext: (context: string) => void;
+    saveToSupabase: () => Promise<{ success: boolean; error?: string }>;
+    isLoading: boolean;
 }
 
 const ProposalContext = createContext<ProposalContextType | undefined>(undefined);
 
-export function ProposalProvider({ children }: { children: ReactNode }) {
-    const [data, setData] = useState<ProposalData>(defaultProposalData);
+export function ProposalProvider({
+    children,
+    initialData
+}: {
+    children: ReactNode;
+    initialData?: ProposalData;
+}) {
+    const [data, setData] = useState<ProposalData>(initialData || defaultProposalData);
+    const [isLoading, setIsLoading] = useState(false);
 
     const updateData = (newData: Partial<ProposalData>) => {
         setData((prev) => ({ ...prev, ...newData }));
@@ -170,8 +183,23 @@ export function ProposalProvider({ children }: { children: ReactNode }) {
         setData((prev) => ({ ...prev, aiContext: context }));
     };
 
+    const saveToSupabase = async () => {
+        setIsLoading(true);
+        try {
+            // This would be a server action or direct client call
+            console.log("Saving to Supabase...", data);
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: 'Falha ao salvar' };
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
-        <ProposalContext.Provider value={{ data, updateData, updateSlideData, updateMeta, setAiContext }}>
+        <ProposalContext.Provider value={{ data, updateData, updateSlideData, updateMeta, setAiContext, saveToSupabase, isLoading }}>
             {children}
         </ProposalContext.Provider>
     );

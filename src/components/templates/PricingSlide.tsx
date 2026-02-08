@@ -11,6 +11,7 @@ import {
     Star
 } from '@mui/icons-material';
 import { useProposal } from '@/contexts/ProposalContext';
+import EditableText from '@/components/ui/EditableText';
 
 const ASSETS = {
     PATTERN_CAMADA: '/assets/pattern-camada.svg'
@@ -18,12 +19,16 @@ const ASSETS = {
 
 interface PricingSlideProps {
     className?: string;
+    editable?: boolean;
 }
 
-export default function PricingSlide({ className }: PricingSlideProps) {
+export default function PricingSlide({
+    className,
+    editable = false
+}: PricingSlideProps) {
     const swiperSlide = useSwiperSlide();
     const isActive = swiperSlide ? swiperSlide.isActive : true;
-    const { data } = useProposal();
+    const { data, updateSlideData } = useProposal();
     const { pricing } = data.slides;
 
     return (
@@ -94,9 +99,14 @@ export default function PricingSlide({ className }: PricingSlideProps) {
 
                                     {/* Value */}
                                     <div className="relative z-10">
-                                        <h3 className="text-[56px] font-bold text-white tracking-tight -ml-1 leading-none break-words">
-                                            {pricing.totalValue}
-                                        </h3>
+                                        <div className="text-[56px] font-bold text-white tracking-tight -ml-1 leading-none break-words border-b border-white/10">
+                                            <EditableText
+                                                value={pricing.totalValue}
+                                                onChange={(val) => updateSlideData('pricing', { totalValue: val })}
+                                                className="w-full"
+                                                editable={editable}
+                                            />
+                                        </div>
                                         <div className="mt-3 inline-flex items-center px-3 py-1.5 rounded-full bg-white/20 border border-white/10 max-w-full">
                                             <span className="text-[12px] font-bold text-white truncate">Parcelamento disponível</span>
                                         </div>
@@ -105,11 +115,21 @@ export default function PricingSlide({ className }: PricingSlideProps) {
 
                                 {/* Details Grid - Moved Up */}
                                 <div className="relative z-10 grid grid-cols-2 gap-3 w-full mt-2">
-                                    {pricing.features.map((feature: string, index: number) => (
+                                    {(pricing.features || []).map((feature: string, index: number) => (
                                         <div key={index} className="bg-white/10 rounded-xl p-4 flex flex-col gap-2 min-w-0">
                                             {index === 0 ? <Groups className="text-white" sx={{ fontSize: 24 }} /> : <AccessTime className="text-white" sx={{ fontSize: 24 }} />}
                                             <div className="min-w-0">
-                                                <p className="text-[18px] font-bold text-white leading-tight truncate">{feature}</p>
+                                                <div className="text-[18px] font-bold text-white leading-tight break-words border-b border-white/10">
+                                                    <EditableText
+                                                        value={feature}
+                                                        onChange={(val) => {
+                                                            const newFeatures = [...pricing.features];
+                                                            newFeatures[index] = val;
+                                                            updateSlideData('pricing', { features: newFeatures });
+                                                        }}
+                                                        editable={editable}
+                                                    />
+                                                </div>
                                                 <p className="text-[12px] text-white/70 truncate">{index === 0 ? 'Especialistas' : 'Entrega Ágil'}</p>
                                             </div>
                                         </div>
@@ -139,14 +159,34 @@ export default function PricingSlide({ className }: PricingSlideProps) {
 
                                 {/* List */}
                                 <div className="flex flex-col gap-5 w-full pr-2">
-                                    {pricing.deliverables.map((item: { title: string; description: string }, index: number) => (
+                                    {(pricing.deliverables || []).map((item: { title: string; description: string }, index: number) => (
                                         <div key={index} className="flex gap-5 p-4 rounded-2xl bg-white/5 border border-white/5 items-center hover:bg-white/10 transition-colors w-full">
                                             <div className="w-10 h-10 rounded-xl bg-[#0B95DA]/20 flex items-center justify-center text-[#0B95DA] shrink-0">
                                                 {index === 0 ? <Description sx={{ fontSize: 24 }} /> : index === 1 ? <Timeline sx={{ fontSize: 24 }} /> : <Assignment sx={{ fontSize: 24 }} />}
                                             </div>
                                             <div className="flex-1 min-w-0 pr-2">
-                                                <p className="text-[18px] font-bold text-white break-words">{item.title}</p>
-                                                <p className="text-[14px] text-white/50 break-words">{item.description}</p>
+                                                <div className="text-[18px] font-bold text-white break-words border-b border-white/10 mb-1">
+                                                    <EditableText
+                                                        value={item.title}
+                                                        onChange={(val) => {
+                                                            const newDeliverables = [...pricing.deliverables];
+                                                            newDeliverables[index] = { ...newDeliverables[index], title: val };
+                                                            updateSlideData('pricing', { deliverables: newDeliverables });
+                                                        }}
+                                                        editable={editable}
+                                                    />
+                                                </div>
+                                                <div className="text-[14px] text-white/50 break-words border-b border-white/10">
+                                                    <EditableText
+                                                        value={item.description}
+                                                        onChange={(val) => {
+                                                            const newDeliverables = [...pricing.deliverables];
+                                                            newDeliverables[index] = { ...newDeliverables[index], description: val };
+                                                            updateSlideData('pricing', { deliverables: newDeliverables });
+                                                        }}
+                                                        editable={editable}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     ))}

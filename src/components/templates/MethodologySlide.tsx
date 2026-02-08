@@ -90,16 +90,19 @@ const ASSETS = {
     BG_VIDEO: '/assets/methodology-bg.mp4'
 };
 
+import { useProposal } from '@/contexts/ProposalContext';
+import EditableText from '@/components/ui/EditableText';
+
 interface MethodologySlideProps {
     className?: string;
+    editable?: boolean;
 }
 
-import { useProposal } from '@/contexts/ProposalContext';
-
-// ... (keep imports)
-
-export default function MethodologySlide({ className }: MethodologySlideProps) {
-    const { data } = useProposal();
+export default function MethodologySlide({
+    className,
+    editable = false
+}: MethodologySlideProps) {
+    const { data, updateSlideData } = useProposal();
     const { methodology } = data.slides;
 
     return (
@@ -120,7 +123,13 @@ export default function MethodologySlide({ className }: MethodologySlideProps) {
 
             {/* Header */}
             <div className="absolute top-[8%] left-[6%] z-20">
-                <Titulo text={methodology.title} />
+                <EditableText
+                    tagName="h1"
+                    value={methodology.title}
+                    onChange={(val) => updateSlideData('methodology', { title: val })}
+                    className="text-[6vh] font-bold text-white border-b border-white/10"
+                    editable={editable}
+                />
             </div>
 
             {/* Content Swiper */}
@@ -152,7 +161,7 @@ export default function MethodologySlide({ className }: MethodologySlideProps) {
                     }}
                     className="w-full h-full !overflow-visible"
                 >
-                    {methodology.steps.map((stepData, index) => {
+                    {(methodology.steps || []).map((stepData, index) => {
                         // Merge with static config to keep icons/colors
                         const staticStep = STEPS[index] || STEPS[0];
                         const StepIcon = staticStep.icon;
@@ -191,9 +200,17 @@ export default function MethodologySlide({ className }: MethodologySlideProps) {
                                             >
                                                 <StepIcon className="text-white text-[3vh]" />
                                             </div>
-                                            <h3 className="text-[4vh] font-bold text-white">
-                                                {label}
-                                            </h3>
+                                            <EditableText
+                                                tagName="h3"
+                                                value={label}
+                                                onChange={(val) => {
+                                                    const newSteps = [...methodology.steps];
+                                                    newSteps[index] = { ...newSteps[index], label: val };
+                                                    updateSlideData('methodology', { steps: newSteps });
+                                                }}
+                                                className="text-[4vh] font-bold text-white border-b border-white/10"
+                                                editable={editable}
+                                            />
                                         </div>
                                         <div className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center text-white/50 font-mono text-sm">
                                             {index + 1}
@@ -206,9 +223,19 @@ export default function MethodologySlide({ className }: MethodologySlideProps) {
                                     </div>
 
                                     {/* Description */}
-                                    <p className="text-[2vh] text-gray-300 leading-relaxed mb-6">
-                                        {description}
-                                    </p>
+                                    <div className="text-[2vh] text-gray-300 leading-relaxed mb-6">
+                                        <EditableText
+                                            tagName="p"
+                                            value={description}
+                                            onChange={(val) => {
+                                                const newSteps = [...methodology.steps];
+                                                newSteps[index] = { ...newSteps[index], description: val };
+                                                updateSlideData('methodology', { steps: newSteps });
+                                            }}
+                                            className="border-b border-white/10"
+                                            editable={editable}
+                                        />
+                                    </div>
 
                                     {/* Bullets - Using static sub-steps for now as structure might differ */}
                                     <div className="grid grid-cols-2 gap-x-8 gap-y-4 border-t border-white/5 pt-6">

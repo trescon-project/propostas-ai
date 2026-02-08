@@ -6,19 +6,22 @@ const ASSETS = {
 };
 
 import { useProposal } from '@/contexts/ProposalContext';
+import EditableText from '@/components/ui/EditableText';
 
 interface SolutionSlideProps {
     title?: string;
     description?: string;
     className?: string;
+    editable?: boolean;
 }
 
 export default function SolutionSlide({
     title,
     description,
-    className
+    className,
+    editable = false
 }: SolutionSlideProps) {
-    const { data } = useProposal();
+    const { data, updateSlideData } = useProposal();
     const displayTitle = title || data.slides.solution.title;
     const displayDescription = description || data.slides.solution.description;
 
@@ -32,8 +35,6 @@ export default function SolutionSlide({
                 style={{ backgroundImage: `url(${ASSETS.BG})` }}
             />
 
-
-
             {/* Glass Box Container */}
             <div className="absolute inset-0 flex items-center justify-center p-16 z-20">
                 <div
@@ -43,22 +44,34 @@ export default function SolutionSlide({
                     }}
                 >
                     {/* Label/Overline */}
-                    <h3 className="text-[2vh] font-semibold text-blue-400 uppercase tracking-widest mb-4 border-b border-white/10 pb-4 inline-block w-full">
-                        Solução Proposta
-                    </h3>
+                    <div className="text-[2vh] font-semibold text-blue-400 uppercase tracking-widest mb-4 border-b border-white/10 pb-4 inline-block w-full">
+                        <EditableText
+                            value="Solução Proposta"
+                            onChange={() => { }} // Static label for now or could be editable too
+                            editable={editable}
+                        />
+                    </div>
 
                     {/* Title/Head */}
                     <div className="mb-4 text-white">
-                        <h2 className="text-[4vh] font-bold leading-tight">
-                            {displayTitle}
-                        </h2>
+                        <EditableText
+                            tagName="h2"
+                            value={displayTitle}
+                            onChange={(val) => updateSlideData('solution', { title: val })}
+                            className="text-[4vh] font-bold leading-tight border-b border-white/10"
+                            editable={editable}
+                        />
                     </div>
 
                     {/* Description Text */}
                     <div className="flex-1 overflow-y-auto pr-4 scrollbar-hide text-white/90">
-                        <p className="text-[2.2vh] leading-relaxed font-light whitespace-pre-wrap">
-                            {displayDescription}
-                        </p>
+                        <EditableText
+                            tagName="p"
+                            value={displayDescription}
+                            onChange={(val) => updateSlideData('solution', { description: val })}
+                            className="text-[2.2vh] leading-relaxed font-light whitespace-pre-wrap border-b border-white/10"
+                            editable={editable}
+                        />
                     </div>
 
                 </div>
