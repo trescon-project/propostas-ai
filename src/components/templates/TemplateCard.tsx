@@ -1,15 +1,14 @@
 'use client'
 
 import React from 'react'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { Database } from '@/types/database'
-
-type Template = Database['public']['Tables']['templates']['Row']
 
 interface TemplateCardProps {
-    template: Template
-    onUseTemplate?: (template: Template) => void
+    template: {
+        id: string;
+        name: string;
+        description: string;
+    }
+    onUseTemplate?: (template: any) => void
 }
 
 export const TemplateCard: React.FC<TemplateCardProps> = ({ template, onUseTemplate }) => {
@@ -17,16 +16,13 @@ export const TemplateCard: React.FC<TemplateCardProps> = ({ template, onUseTempl
         <div className="group relative flex flex-col p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-zinc-700 transition-all duration-300 hover:shadow-2xl hover:shadow-black/40 h-full">
             <div className="flex-1">
                 <div className="flex items-center justify-between mb-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${template.is_public ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30' : 'bg-zinc-700/30 text-zinc-400 border-zinc-700/50'}`}>
-                        {template.is_public ? 'Público' : 'Privado'}
-                    </span>
-                    <span className="text-[10px] text-zinc-500">
-                        {format(new Date(template.created_at), "dd MMM, yyyy", { locale: ptBR })}
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-medium border bg-indigo-500/20 text-indigo-300 border-indigo-500/30">
+                        {template.id === 'default' ? 'Padrão' : 'Personalizado'}
                     </span>
                 </div>
 
                 <h3 className="text-lg font-semibold text-zinc-100 group-hover:text-white transition-colors mb-2">
-                    {template.title}
+                    {template.name}
                 </h3>
 
                 {template.description && (

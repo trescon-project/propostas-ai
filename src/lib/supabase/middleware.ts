@@ -42,9 +42,16 @@ export async function updateSession(request: NextRequest) {
         !request.nextUrl.pathname.startsWith('/auth') &&
         !request.nextUrl.pathname.startsWith('/public') // Allow public access to shared proposals
     ) {
-        // no user, potentially respond by redirecting the user to the login page
+        // no user, respond by redirecting the user to the auth page
         const url = request.nextUrl.clone()
-        url.pathname = '/login'
+        url.pathname = '/auth'
+        return NextResponse.redirect(url)
+    }
+
+    // if user is authenticated and on the root page, redirect to dashboard
+    if (user && request.nextUrl.pathname === '/') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/dashboard'
         return NextResponse.redirect(url)
     }
 
