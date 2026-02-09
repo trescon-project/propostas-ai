@@ -7,13 +7,7 @@ import { Mousewheel, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-import HomeSlide from '@/components/templates/HomeSlide';
-import ChallengeSlide from '@/components/templates/ChallengeSlide';
-import SolutionSlide from '@/components/templates/SolutionSlide';
-import PricingSlide from '@/components/templates/PricingSlide';
-import MethodologySlide from '@/components/templates/MethodologySlide';
-import WorkPlanSlide from '@/components/templates/WorkPlanSlide';
-import WorkPlanDrilldownSlide from '@/components/templates/WorkPlanDrilldownSlide';
+import { getTemplateFn } from '@/config/templates';
 import { generateProposalAction } from '@/app/actions/generateProposal';
 
 import { jsPDF } from 'jspdf';
@@ -33,6 +27,10 @@ function EditorContent() {
     const [userName, setUserName] = useState<string>('');
     const searchParams = useSearchParams();
     const proposalId = searchParams.get('id');
+
+    // Resolve template dynamically
+    const templateId = (data.slides as any)?.templateId || 'default';
+    const template = getTemplateFn(templateId);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -321,30 +319,33 @@ function EditorContent() {
                     modules={[Mousewheel, Pagination]}
                     className="w-full h-full"
                 >
-                    <SwiperSlide>
-                        <HomeSlide editable={true} />
-                    </SwiperSlide>
-                    <SwiperSlide>
-                        <ChallengeSlide editable={true} />
-                    </SwiperSlide>
-                    <SwiperSlide>
-                        <SolutionSlide editable={true} />
-                    </SwiperSlide>
-                    <SwiperSlide>
-                        <MethodologySlide editable={true} />
-                    </SwiperSlide>
-                    <SwiperSlide>
-                        <WorkPlanSlide editable={true} />
-                    </SwiperSlide>
-                    {/* @ts-ignore */}
-                    {(data.slides.weeklyDetails || []).map((week) => (
-                        <SwiperSlide key={week.id}>
-                            <WorkPlanDrilldownSlide week={week as any} editable={true} />
-                        </SwiperSlide>
-                    ))}
-                    <SwiperSlide>
-                        <PricingSlide editable={true} />
-                    </SwiperSlide>
+                    {template.slides.map((slideConfig, index) => {
+                        const SlideComponent = slideConfig.component;
+
+                        // Handle Drilldown Slides (e.g. Weekly Details)
+                        if (slideConfig.drilldownKey) {
+                            const items = ((data.slides as any)[slideConfig.drilldownKey] as any[]) || [];
+                            return items.map((item, itemIdx) => {
+                                // Dynamic props based on known drilldown types
+                                const drilldownProps = slideConfig.drilldownKey === 'weeklyDetails'
+                                    ? { week: item }
+                                    : { data: item };
+
+                                return (
+                                    <SwiperSlide key={`${slideConfig.name}-${item.id || itemIdx}`}>
+                                        <SlideComponent {...drilldownProps} editable={true} />
+                                    </SwiperSlide>
+                                );
+                            });
+                        }
+
+                        // Handle Standard Slides
+                        return (
+                            <SwiperSlide key={`${slideConfig.name}-${index}`}>
+                                <SlideComponent editable={true} />
+                            </SwiperSlide>
+                        );
+                    })}
                 </Swiper>
             </div>
         </div>

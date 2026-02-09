@@ -1,36 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TemplateCard } from '@/components/templates/TemplateCard'
-import { ImportTemplateDialog } from '@/components/templates/ImportTemplateDialog'
-import Link from 'next/link'
+import { templates, TemplateConfig } from '@/config/templates'
 import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined'
 
 export default function TemplatesPage() {
-    const [templates, setTemplates] = useState<any[]>([])
-    const [loading, setLoading] = useState(true)
-    const [isImportOpen, setIsImportOpen] = useState(false)
     const supabase = createClient()
+    const [loading, setLoading] = useState(false)
 
-    useEffect(() => {
-        fetchTemplates()
-    }, [])
-
-    const fetchTemplates = async () => {
-        setLoading(true)
-        const { data, error } = await supabase
-            .from('templates')
-            .select('*')
-            .order('created_at', { ascending: false })
-
-        if (data) {
-            setTemplates(data)
-        }
-        setLoading(false)
-    }
-
-    const handleUseTemplate = async (template: any) => {
+    const handleUseTemplate = async (template: TemplateConfig) => {
         setLoading(true)
         try {
             const { data: { user } } = await supabase.auth.getUser()
@@ -38,16 +18,22 @@ export default function TemplatesPage() {
 
             // Generate a unique slug
             const uniqueId = Math.random().toString(36).substring(2, 8)
-            const slug = `${template.title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${uniqueId}`
+            const slug = `${template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${uniqueId}`
+
+            // Store templateId in the content JSON
+            const initialContent = {
+                templateId: template.id,
+                ...template.defaultContent
+            }
 
             const { data: newProposal, error } = await supabase
                 .from('proposals')
                 .insert({
                     user_id: user.id,
-                    title: `Nova: ${template.title}`,
+                    title: `Nova: ${template.name}`,
                     company_name: 'Empresa Cliente',
                     custom_url: slug,
-                    content: template.content,
+                    content: initialContent,
                     status: 'rascunho',
                     date: new Date().toLocaleDateString('pt-BR')
                 })
@@ -63,12 +49,6 @@ export default function TemplatesPage() {
 
         } catch (err: any) {
             console.error('Erro ao usar template:', err)
-            console.error('Error details:', {
-                message: err.message,
-                code: err.code,
-                details: err.details,
-                hint: err.hint
-            })
             alert(`Erro ao criar proposta: ${err.message || 'Erro desconhecido'}`)
         } finally {
             setLoading(false)
@@ -104,52 +84,20 @@ export default function TemplatesPage() {
                         </p>
                     </div>
 
-                    <button
-                        onClick={() => setIsImportOpen(true)}
-                        className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-zinc-200 transition-colors shadow-lg shadow-white/10 animate-fadeIn group"
-                        style={{ animationDelay: '400ms' }}
-                    >
-                        <AddBoxOutlinedIcon className="text-black group-hover:scale-110 transition-transform" />
-                        Importar Template
-                    </button>
+
                 </header>
 
-                {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="h-64 bg-zinc-900/50 rounded-2xl border border-zinc-800" />
-                        ))}
-                    </div>
-                ) : templates.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {templates.map((template, idx) => (
-                            <div key={template.id} className="animate-slideUp" style={{ animationDelay: `${(idx * 100) + 500}ms` }}>
-                                <TemplateCard
-                                    template={template}
-                                    onUseTemplate={handleUseTemplate}
-                                />
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center p-24 border-2 border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20 animate-fadeIn">
-                        <p className="text-zinc-400 text-lg">Nenhum template encontrado.</p>
-                        <button
-                            onClick={() => setIsImportOpen(true)}
-                            className="mt-4 text-white underline underline-offset-4 decoration-zinc-700 hover:decoration-white transition-colors"
-                        >
-                            Importe seu primeiro template
-                        </button>
-                    </div>
-                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {templates.map((template, idx) => (
+                        <div key={template.id} className="animate-slideUp" style={{ animationDelay: `${(idx * 100) + 500}ms` }}>
+                            <TemplateCard
+                                template={template}
+                                onUseTemplate={handleUseTemplate}
+                            />
+                        </div>
+                    ))}
+                </div>
             </div>
-
-            {isImportOpen && (
-                <ImportTemplateDialog
-                    onClose={() => setIsImportOpen(false)}
-                    onImport={fetchTemplates}
-                />
-            )}
         </div>
     )
 }

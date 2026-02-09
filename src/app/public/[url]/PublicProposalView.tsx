@@ -2,16 +2,14 @@
 
 import React from 'react';
 import { useProposal } from '@/contexts/ProposalContext';
-import HomeSlide from '@/components/templates/HomeSlide';
-import ChallengeSlide from '@/components/templates/ChallengeSlide';
-import SolutionSlide from '@/components/templates/SolutionSlide';
-import MethodologySlide from '@/components/templates/MethodologySlide';
-import WorkPlanSlide from '@/components/templates/WorkPlanSlide';
-import WorkPlanDrilldownSlide from '@/components/templates/WorkPlanDrilldownSlide';
-import PricingSlide from '@/components/templates/PricingSlide';
+import { getTemplateFn } from '@/config/templates';
 
 export default function PublicProposalView() {
     const { data } = useProposal();
+
+    // Resolve template dynamically
+    const templateId = (data.slides as any)?.templateId || 'default';
+    const template = getTemplateFn(templateId);
 
     return (
         <div className="w-full h-screen bg-[#000528] overflow-y-auto overflow-x-hidden snap-y snap-mandatory scroll-smooth">
@@ -23,29 +21,32 @@ export default function PublicProposalView() {
             </div>
 
             {/* Slides rendered vertically */}
-            <section className="w-full h-screen relative flex-shrink-0 snap-start">
-                <HomeSlide />
-            </section>
-            <section className="w-full h-screen relative flex-shrink-0 snap-start">
-                <ChallengeSlide />
-            </section>
-            <section className="w-full h-screen relative flex-shrink-0 snap-start">
-                <SolutionSlide />
-            </section>
-            <section className="w-full h-screen relative flex-shrink-0 snap-start">
-                <MethodologySlide />
-            </section>
-            <section className="w-full h-screen relative flex-shrink-0 snap-start">
-                <WorkPlanSlide />
-            </section>
-            {data.slides.weeklyDetails.map((week) => (
-                <section key={week.id} className="w-full h-screen relative flex-shrink-0 snap-start">
-                    <WorkPlanDrilldownSlide week={week as any} />
-                </section>
-            ))}
-            <section className="w-full h-screen relative flex-shrink-0 snap-start">
-                <PricingSlide />
-            </section>
+            {template.slides.map((slideConfig, index) => {
+                const SlideComponent = slideConfig.component;
+
+                // Handle Drilldown Slides (e.g. Weekly Details)
+                if (slideConfig.drilldownKey) {
+                    const items = ((data.slides as any)[slideConfig.drilldownKey] as any[]) || [];
+                    return items.map((item, itemIdx) => {
+                        // Dynamic props based on known drilldown types
+                        const drilldownProps = slideConfig.drilldownKey === 'weeklyDetails'
+                            ? { week: item }
+                            : { data: item };
+
+                        return (
+                            <section key={`${slideConfig.name}-${item.id || itemIdx}`} className="w-full h-screen relative flex-shrink-0 snap-start">
+                                <SlideComponent {...drilldownProps} />
+                            </section>
+                        );
+                    });
+                }
+
+                return (
+                    <section key={`${slideConfig.name}-${index}`} className="w-full h-screen relative flex-shrink-0 snap-start">
+                        <SlideComponent />
+                    </section>
+                );
+            })}
 
             {/* Sticky CTA for Clients? */}
             <div className="fixed bottom-10 right-10 z-50">
