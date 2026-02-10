@@ -50,6 +50,7 @@ export async function duplicateProposalAction(id: string) {
         date: original.date,
         status: 'rascunho', // Always draft
         last_edited_by_name: user.email || user.id,
+        last_edited_by: user.id,
         last_edited_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()

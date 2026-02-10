@@ -15,6 +15,7 @@ export async function trackAccessAction(proposalId: string) {
         .from('proposals')
         .update({
             last_accessed_by_name: user.email || user.id,
+            last_accessed_by: user.id,
             last_accessed_at: new Date().toISOString()
         })
         .eq('id', proposalId)

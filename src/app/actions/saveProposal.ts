@@ -24,6 +24,7 @@ export async function saveProposalAction(proposalData: any) {
             ai_context: proposalData.aiContext,
             status: proposalData.meta.status || 'rascunho',
             last_edited_by_name: user.email || user.id,
+            last_edited_by: user.id,
             last_edited_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
         }, {
