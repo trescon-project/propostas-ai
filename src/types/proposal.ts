@@ -25,9 +25,9 @@ export interface Proposal {
 }
 
 export const PROPOSAL_STATUSES: { id: ProposalStatus; label: string; color: string }[] = [
-    { id: 'todo', label: 'To Do', color: 'bg-zinc-500/20 text-zinc-300 border-zinc-500/30' },
-    { id: 'rascunho', label: 'Rascunho', color: 'bg-gray-500/20 text-gray-300 border-gray-500/30' },
-    { id: 'em análise', label: 'Em Análise', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' },
-    { id: 'aprovado', label: 'Aprovado', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
-    { id: 'reprovado', label: 'Reprovado', color: 'bg-rose-500/20 text-rose-400 border-rose-500/30' },
+    { id: 'todo', label: 'To Do', color: '#BA55D3' },
+    { id: 'rascunho', label: 'Rascunho', color: '#4682B4' },
+    { id: 'em análise', label: 'Em Análise', color: '#FFA500' },
+    { id: 'aprovado', label: 'Aprovado', color: '#3CB371' },
+    { id: 'reprovado', label: 'Reprovado', color: '#B22222' },
 ];

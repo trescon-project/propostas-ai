@@ -19,9 +19,15 @@ export function KanbanColumn({ status, proposals }: KanbanColumnProps) {
     return (
         <div className="flex flex-col h-full min-w-[350px] bg-zinc-900/10 rounded-xl border border-zinc-800/50">
             {/* Header */}
-            <div className={`p-4 border-b border-zinc-800/50 flex items-center justify-between rounded-t-xl ${status.color.split(' ')[0]} bg-opacity-10`}>
+            <div
+                className="p-4 border-b border-zinc-800/50 flex items-center justify-between rounded-t-xl bg-zinc-900/50"
+                style={{ borderTop: `2px solid ${status.color}` }}
+            >
                 <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${status.color.replace('bg-', 'bg-').split(' ')[0].replace('/20', '')}`} />
+                    <span
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: status.color }}
+                    />
                     <h3 className="font-semibold text-zinc-100">{status.label}</h3>
                 </div>
                 <span className="text-xs font-medium text-zinc-500 bg-zinc-900 px-2 py-0.5 rounded-full border border-zinc-800">

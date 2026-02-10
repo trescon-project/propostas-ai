@@ -14,12 +14,7 @@ interface ProposalCardProps {
     proposal: Proposal
 }
 
-const statusColors: Record<string, string> = {
-    'rascunho': 'bg-gray-500/20 text-gray-300 border-gray-500/30',
-    'aprovada': 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-    'reprovada': 'bg-rose-500/20 text-rose-400 border-rose-500/30',
-    'em análise': 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-}
+
 
 export const ProposalCard: React.FC<ProposalCardProps> = ({ proposal }) => {
     const [isMenuOpen, setIsMenuOpen] = React.useState(false)
@@ -72,9 +67,14 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({ proposal }) => {
             <Link href={`/editor?id=${proposal.id}`} className="absolute inset-0 z-0" />
 
             <div className="flex justify-between items-start relative z-20 pointer-events-none">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium border ${statusColors[proposal.status || 'rascunho'] || statusColors['rascunho']}`}>
-                    {(proposal.status || 'rascunho').charAt(0).toUpperCase() + (proposal.status || 'rascunho').slice(1)}
-                </span>
+                <div className="relative z-30 flex-1 pr-4">
+                    <div className="text-zinc-500 text-xs font-medium tracking-wider uppercase mb-1">
+                        {proposal.company_name}
+                    </div>
+                    <h3 className="text-xl font-semibold text-zinc-100 group-hover:text-white transition-colors line-clamp-2">
+                        {proposal.title}
+                    </h3>
+                </div>
 
                 <div className="relative pointer-events-auto" ref={menuRef}>
                     <button
@@ -124,23 +124,10 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({ proposal }) => {
                 </div>
             </div>
 
-            <div className="mt-4 pointer-events-none relative z-10">
-                <div className="text-zinc-500 text-xs font-medium tracking-wider uppercase">
-                    {proposal.company_name}
-                </div>
 
-                <h3 className="mt-1 text-xl font-semibold text-zinc-100 group-hover:text-white transition-colors">
-                    {proposal.title}
-                </h3>
-            </div>
 
-            <div className="mt-8 pt-6 border-t border-zinc-800/50 flex flex-col gap-2 pointer-events-none relative z-10">
-                <div className="flex items-center justify-between text-[11px] text-zinc-500">
-                    <span>Última edição</span>
-                    <span className="text-zinc-400">
-                        {format(new Date(proposal.updated_at), "dd MMM, yyyy", { locale: ptBR })}
-                    </span>
-                </div>
+            <div className="mt-auto pt-6 border-t border-zinc-800/50 flex flex-col gap-2 pointer-events-none relative z-10">
+
 
                 {(proposal.accessor_profile || proposal.last_accessed_by_name) && (
                     <div className="flex flex-col gap-0.5 mt-2">
