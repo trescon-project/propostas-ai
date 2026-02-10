@@ -5,19 +5,13 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { MoreVert, Edit, ContentCopy, Delete } from '@mui/icons-material'
+import { Avatar, Tooltip } from '@mui/material'
 import { deleteProposalAction, duplicateProposalAction } from '@/app/actions/manageProposals'
 
+import { Proposal } from '@/types/proposal'
+
 interface ProposalCardProps {
-    proposal: {
-        id: string
-        title: string
-        company_name: string
-        custom_url: string
-        status: string
-        last_accessed_by_name: string | null
-        last_accessed_at: string | null
-        updated_at: string
-    }
+    proposal: Proposal
 }
 
 const statusColors: Record<string, string> = {
@@ -148,13 +142,24 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({ proposal }) => {
                     </span>
                 </div>
 
-                {proposal.last_accessed_by_name && (
+                {(proposal.accessor_profile || proposal.last_accessed_by_name) && (
                     <div className="flex flex-col gap-0.5 mt-2">
                         <span className="text-[10px] text-zinc-600 uppercase tracking-tighter font-bold">Último acesso por</span>
                         <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-zinc-300 truncate max-w-[120px]">
-                                {proposal.last_accessed_by_name}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <Tooltip title={proposal.accessor_profile?.full_name || proposal.accessor_profile?.email || proposal.last_accessed_by_name || ''}>
+                                    <Avatar
+                                        src={proposal.accessor_profile?.avatar_url || undefined}
+                                        alt={proposal.accessor_profile?.full_name || proposal.last_accessed_by_name || 'User'}
+                                        sx={{ width: 24, height: 24, fontSize: 10, bgcolor: 'rgb(39 39 42)' }}
+                                    >
+                                        {((proposal.accessor_profile?.full_name || proposal.last_accessed_by_name || '?').charAt(0).toUpperCase())}
+                                    </Avatar>
+                                </Tooltip>
+                                <span className="text-zinc-300 truncate max-w-[100px]">
+                                    {proposal.accessor_profile?.full_name?.split(' ')[0] || proposal.last_accessed_by_name?.split('@')[0]}
+                                </span>
+                            </div>
                             <span className="text-zinc-500 shrink-0">
                                 {lastAccess}
                             </span>

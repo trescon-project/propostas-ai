@@ -1,6 +1,7 @@
 import React from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { ProposalCard } from '@/components/dashboard/ProposalCard'
+import { KanbanBoard } from '@/components/dashboard/KanbanBoard'
 import Link from 'next/link'
 
 export default async function DashboardPage() {
@@ -8,11 +9,15 @@ export default async function DashboardPage() {
 
     const { data: proposals, error } = await supabase
         .from('proposals')
-        .select('*')
+        .select(`
+            *,
+            editor_profile:profiles!last_edited_by(full_name, avatar_url, email),
+            accessor_profile:profiles!last_accessed_by(full_name, avatar_url, email)
+        `)
         .order('updated_at', { ascending: false })
 
     if (error) {
-        console.error('Error fetching proposals:', error)
+        console.error('Error fetching proposals:', JSON.stringify(error, null, 2))
     }
 
     return (
@@ -33,7 +38,7 @@ export default async function DashboardPage() {
             </div>
 
             {/* Content Layer */}
-            <div className="relative z-10 max-w-7xl mx-auto p-8 pt-12 text-zinc-100">
+            <div className="relative z-10 w-full mx-auto p-8 pt-12 text-zinc-100">
 
                 <header className="flex items-center justify-between mb-12 animate-slideUp">
                     <div>
@@ -54,22 +59,20 @@ export default async function DashboardPage() {
                     </Link>
                 </header>
 
-                {proposals && proposals.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {proposals.map((proposal, idx) => (
-                            <div key={proposal.id} className="animate-popIn opacity-0" style={{ animationDelay: `${(idx * 100) + 300}ms` }}>
-                                <ProposalCard proposal={proposal} />
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center p-24 border-2 border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20">
-                        <p className="text-zinc-400 text-lg">Nenhuma proposta encontrada.</p>
-                        <Link href="/editor" className="mt-4 text-white underline underline-offset-4 decoration-zinc-700 hover:decoration-white transition-colors">
-                            Comece criando sua primeira proposta
-                        </Link>
-                    </div>
-                )}
+                <div className="flex-1 w-full h-[calc(100vh-200px)]">
+                    {proposals && proposals.length > 0 ? (
+                        <div className="h-full w-full">
+                            <KanbanBoard initialProposals={proposals as any} />
+                        </div>
+                    ) : (
+                        <div className="flex flex-col items-center justify-center h-full p-24 border-2 border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20">
+                            <p className="text-zinc-400 text-lg">Nenhuma proposta encontrada.</p>
+                            <Link href="/editor" className="mt-4 text-white underline underline-offset-4 decoration-zinc-700 hover:decoration-white transition-colors">
+                                Comece criando sua primeira proposta
+                            </Link>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     )
