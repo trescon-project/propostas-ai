@@ -67,7 +67,14 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({ proposal }) => {
             <Link href={`/editor?id=${proposal.id}`} className="absolute inset-0 z-0" />
 
             <div className="flex justify-between items-start relative z-20 pointer-events-none">
-                <div />
+                <div className="relative z-30 flex-1 pr-4">
+                    <div className="text-zinc-500 text-xs font-medium tracking-wider uppercase mb-1">
+                        {proposal.company_name}
+                    </div>
+                    <h3 className="text-xl font-semibold text-zinc-100 group-hover:text-white transition-colors line-clamp-2">
+                        {proposal.title}
+                    </h3>
+                </div>
 
                 <div className="relative pointer-events-auto" ref={menuRef}>
                     <button
@@ -117,17 +124,9 @@ export const ProposalCard: React.FC<ProposalCardProps> = ({ proposal }) => {
                 </div>
             </div>
 
-            <div className="mt-4 pointer-events-none relative z-10">
-                <div className="text-zinc-500 text-xs font-medium tracking-wider uppercase">
-                    {proposal.company_name}
-                </div>
 
-                <h3 className="mt-1 text-xl font-semibold text-zinc-100 group-hover:text-white transition-colors">
-                    {proposal.title}
-                </h3>
-            </div>
 
-            <div className="mt-8 pt-6 border-t border-zinc-800/50 flex flex-col gap-2 pointer-events-none relative z-10">
+            <div className="mt-auto pt-6 border-t border-zinc-800/50 flex flex-col gap-2 pointer-events-none relative z-10">
 
 
                 {(proposal.accessor_profile || proposal.last_accessed_by_name) && (
