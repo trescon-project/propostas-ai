@@ -12,6 +12,22 @@ export async function saveProposalAction(proposalData: any) {
         return { success: false, error: 'Usuário não autenticado' }
     }
 
+    // Verificar se já existe uma proposta com este custom_url pertencente a outro usuário
+    if (proposalData.meta.customUrl) {
+        const { data: existingProposal } = await supabase
+            .from('proposals')
+            .select('user_id')
+            .eq('custom_url', proposalData.meta.customUrl)
+            .single()
+
+        if (existingProposal && existingProposal.user_id !== user.id) {
+            return {
+                success: false,
+                error: 'Uma proposta com este link personalizado já existe e pertence a outro usuário. Por favor, escolha outro link.'
+            }
+        }
+    }
+
     const { data, error } = await supabase
         .from('proposals')
         .upsert({
@@ -34,6 +50,10 @@ export async function saveProposalAction(proposalData: any) {
 
     if (error) {
         console.error('Error saving proposal:', error)
+        // Melhorar mensagem de erro para RLS
+        if (error.code === '42501') {
+            return { success: false, error: 'Erro de permissão (RLS). Verifique se você é o dono desta proposta.' }
+        }
         return { success: false, error: error.message }
     }
 

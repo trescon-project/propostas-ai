@@ -10,7 +10,7 @@ export async function refineTextAction(currentText: string, context: string) {
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // Changed to stable model
 
         const prompt = `
         Você é um redator especializado em propostas comerciais de alto impacto.
@@ -30,8 +30,8 @@ export async function refineTextAction(currentText: string, context: string) {
         const text = response.text().trim();
 
         return { success: true, text };
-    } catch (error) {
+    } catch (error: any) {
         console.error('Refine Text Error:', error);
-        return { success: false, error: 'Erro ao processar com IA' };
+        return { success: false, error: error.message || 'Erro ao processar com IA' };
     }
 }

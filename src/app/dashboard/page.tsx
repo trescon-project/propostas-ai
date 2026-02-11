@@ -1,8 +1,6 @@
 import React from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { ProposalCard } from '@/components/dashboard/ProposalCard'
-import { KanbanBoard } from '@/components/dashboard/KanbanBoard'
-import Link from 'next/link'
+import { DashboardContent } from '@/components/dashboard/DashboardContent'
 
 export default async function DashboardPage() {
     const supabase = await createClient()
@@ -21,9 +19,9 @@ export default async function DashboardPage() {
     }
 
     return (
-        <div className="relative min-h-screen overflow-x-hidden">
+        <div className="relative h-screen bg-black overflow-hidden">
             {/* Background Video Layer */}
-            <div className="fixed inset-0 z-0 bg-black pointer-events-none">
+            <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-neutral-900/50" />
                 <video
                     autoPlay
@@ -37,43 +35,8 @@ export default async function DashboardPage() {
                 <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/80" />
             </div>
 
-            {/* Content Layer */}
-            <div className="relative z-10 w-full mx-auto p-8 pt-12 text-zinc-100">
-
-                <header className="flex items-center justify-between mb-12 animate-slideUp">
-                    <div>
-                        <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
-                            Suas Propostas
-                        </h1>
-                        <p className="text-zinc-500 mt-2 animate-fadeIn" style={{ animationDelay: '200ms' }}>
-                            Gerencie e acompanhe o status de todas as suas propostas comerciais.
-                        </p>
-                    </div>
-
-                    <Link
-                        href="/editor"
-                        className="px-6 py-3 rounded-xl bg-white text-black font-semibold hover:bg-zinc-200 transition-colors shadow-lg shadow-white/10 animate-fadeIn"
-                        style={{ animationDelay: '400ms' }}
-                    >
-                        Nova Proposta
-                    </Link>
-                </header>
-
-                <div className="flex-1 w-full h-[calc(100vh-200px)]">
-                    {proposals && proposals.length > 0 ? (
-                        <div className="h-full w-full">
-                            <KanbanBoard initialProposals={proposals as any} />
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center justify-center h-full p-24 border-2 border-dashed border-zinc-800 rounded-3xl bg-zinc-900/20">
-                            <p className="text-zinc-400 text-lg">Nenhuma proposta encontrada.</p>
-                            <Link href="/editor" className="mt-4 text-white underline underline-offset-4 decoration-zinc-700 hover:decoration-white transition-colors">
-                                Comece criando sua primeira proposta
-                            </Link>
-                        </div>
-                    )}
-                </div>
-            </div>
+            {/* Client Content Layer */}
+            <DashboardContent proposals={proposals as any || []} />
         </div>
     )
 }

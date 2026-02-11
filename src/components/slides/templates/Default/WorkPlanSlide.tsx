@@ -1,173 +1,191 @@
-'use client';
-
-import { useSwiperSlide } from 'swiper/react';
-import { GlassBox } from '@/components/ui/GlassBox';
-import { Titulo } from '@/components/ui/Titulo';
-import { WeekLabel } from '@/components/ui/WeekLabel';
-import { SystemDot } from '@/components/ui/SystemDot';
-import { Tags, TagVariant } from '@/components/ui/Tags';
-
-const ASSETS = {
-    BG_IMAGE: '/assets/background-5.png'
-};
-const PHASES = [
-    { label: 'Imersão', start: 0.1, width: 0.8, color: 'purple' },
-    { label: 'AS IS Técnico', start: 1.1, width: 1.4, color: 'blue' },
-    { label: 'AS IS de Negócio', start: 1.1, width: 2.8, color: 'purple' },
-    { label: 'Consolidação', start: 4.1, width: 0.8, color: 'blue' },
-    { label: 'Construção TO BE', start: 4.5, width: 1.2, color: 'purple' },
-    { label: 'Apresentação Executiva', start: 5.1, width: 0.8, color: 'blue' },
-];
-
-const WEEKS = [
-    { label: 'SEMANA 1', date: '02/02/2026 - 06/02/2026' },
-    { label: 'SEMANA 2', date: '09/02/2026 - 13/02/2026' },
-    { label: 'SEMANA 3', date: '16/02/2026 - 20/02/2026' },
-    { label: 'SEMANA 4', date: '23/02/2026 - 27/02/2026' },
-    { label: 'SEMANA 5', date: '02/03/2026 - 06/03/2026' },
-    { label: 'SEMANA 6', date: '09/03/2026 - 13/03/2026' }
-];
-
 import { useProposal } from '@/contexts/ProposalContext';
 import EditableText from '@/components/ui/EditableText';
+import { Rnd } from 'react-rnd';
+import { CalendarToday } from '@mui/icons-material';
 
 interface WorkPlanSlideProps {
+    title?: string;
+    weeks?: any[];
     className?: string;
     editable?: boolean;
+    slideId?: string;
+    extraContent?: any[];
 }
 
+const WEEKS_DATA = [
+    { id: '1', title: 'Fase 1: Diagnóstico', mainActivity: 'Entendimento do cenário' },
+    { id: '2', title: 'Fase 2: Planejamento', mainActivity: 'Definição de estratégias' },
+    { id: '3', title: 'Fase 3: Execução', mainActivity: 'Implementação das soluções' },
+    // ... more sample data
+];
+
 export default function WorkPlanSlide({
+    title,
+    weeks,
     className,
-    editable = false
+    editable = false,
+    slideId,
+    extraContent
 }: WorkPlanSlideProps) {
-    const swiperSlide = useSwiperSlide();
-    const isActive = swiperSlide ? swiperSlide.isActive : true;
-    const { data, updateSlideData } = useProposal();
-    const { workPlan } = data.slides;
+    const { updateSlideData, updateExtraContent } = useProposal();
+
+    const displayTitle = title || "Plano de Trabalho";
+    const displayWeeks = weeks || WEEKS_DATA;
+
+    // Helper to calculate total duration in days (approx)
+    const getTotalDuration = () => {
+        const lastWeek = displayWeeks[displayWeeks.length - 1];
+        if (!lastWeek) return 0;
+        // Simple logic assuming sequential weeks
+        return displayWeeks.length * 5; // 5 days per week
+    };
 
     return (
-        <div
-            className={`relative w-full h-full overflow-hidden font-poppins ${className}`}
-            style={{ background: '#000528' }}
-        >
-            {/* ... background could go here if needed ... */}
+        <div className={`relative w-full h-full bg-white overflow-hidden font-poppins ${className}`}>
+            {/* Background decorative elements */}
+            <div className="absolute top-0 right-0 w-[50%] h-full bg-gray-50 skew-x-[-10deg] translate-x-[20%] z-0" />
 
-            {/* Main Container */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 z-20">
+            {/* Header */}
+            <div className="absolute top-[8%] left-[6%] z-20">
+                <div className="inline-flex items-center gap-3 px-4 py-2 bg-blue-50 rounded-full mb-4">
+                    <CalendarToday className="text-blue-600 text-sm" />
+                    <span className="text-blue-600 font-bold text-xs uppercase tracking-wider">Cronograma Executivo</span>
+                </div>
+                <EditableText
+                    tagName="h1"
+                    value={displayTitle}
+                    onChange={(val) => slideId && updateSlideData(slideId, { title: val })}
+                    className="text-[5vh] font-bold text-gray-900 leading-tight"
+                    editable={editable}
+                />
+            </div>
 
-                {/* Title */}
-                <div className={`mb-12 ${isActive ? "animate-slideDown" : "opacity-0"}`}>
-                    <EditableText
-                        tagName="h1"
-                        value={workPlan.title || "Plano de Trabalho"}
-                        onChange={(val) => updateSlideData('workPlan', { title: val })}
-                        className="text-[6vh] font-bold text-white border-b border-white/10"
-                        editable={editable}
-                    />
+            {/* Timeline Container */}
+            <div className="absolute top-[25%] left-[6%] right-[6%] bottom-[10%] z-20 flex flex-col">
+                {/* Timeline Header (Months/Weeks) */}
+                <div className="flex border-b border-gray-200 pb-4 mb-4">
+                    <div className="w-[20%] text-gray-400 text-sm font-medium uppercase tracking-wider">Fases do Projeto</div>
+                    <div className="flex-1 grid grid-cols-12 gap-1 text-center">
+                        {Array.from({ length: 12 }).map((_, i) => (
+                            <div key={i} className="text-xs text-gray-400 font-mono">
+                                Sem {i + 1}
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
-                {/* Timeline Container */}
-                <GlassBox
-                    className={`w-full max-w-[1200px] relative p-8 ${isActive ? "animate-slideUp" : "opacity-0"}`}
-                >
-                    <div style={isActive ? { animationDelay: '0.6s', animationFillMode: 'forwards' } : {}} className="size-full">
+                {/* Weeks/Phases Rows */}
+                <div className="flex-1 overflow-y-auto pr-2 space-y-3 custom-scrollbar">
+                    {displayWeeks.map((week, index) => {
+                        // Calculate start/width based on index (simplified logic for visual demo)
+                        // In a real app this would come from date ranges
+                        const startCol = index * 2 + 1;
+                        const span = 2; // e.g. 2 weeks duration
 
-                        {/* Header Row (Weeks & Dots) */}
-                        <div className="relative mb-8 pt-8">
-                            {/* Connecting Line */}
-                            <div className={`absolute bottom-[5px] left-0 right-0 h-[2px] bg-white/10 ${isActive ? "animate-fadeIn" : "opacity-0"}`}
-                                style={{ animationDelay: '0.8s' }}
-                            />
-
-                            {/* Weeks Grid */}
-                            <div className="grid grid-cols-6 relative">
-                                {(workPlan.weeks || []).map((week, i) => (
-                                    <div key={i} className="flex flex-col items-center relative">
-                                        {/* Week Label & Date */}
-                                        <div
-                                            className={`mb-6 flex flex-col items-center gap-2 ${isActive ? "animate-fadeIn opacity-0" : "opacity-0"}`}
-                                            style={isActive ? { animationDelay: `${0.9 + (i * 0.1)}s`, animationFillMode: 'forwards' } : {}}
-                                        >
-                                            <WeekLabel label={week.label} />
-                                            <EditableText
-                                                value={week.date}
-                                                onChange={(val) => {
-                                                    const newWeeks = [...workPlan.weeks];
-                                                    newWeeks[i] = { ...newWeeks[i], date: val };
-                                                    updateSlideData('workPlan', { weeks: newWeeks });
-                                                }}
-                                                className="text-[1.2vh] text-gray-400 font-light tracking-wide border-b border-white/10"
-                                                editable={editable}
-                                            />
+                        return (
+                            <div key={week.id || index} className="group flex items-center py-3 hover:bg-gray-50 rounded-xl transition-colors px-2">
+                                {/* Phase Info */}
+                                <div className="w-[20%] pr-4">
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${index % 2 === 0 ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                                            }`}>
+                                            {index + 1}
                                         </div>
-
-                                        {/* Dot */}
-                                        <div
-                                            className={`relative z-10 ${isActive ? "animate-scaleIn opacity-0" : "opacity-0"}`}
-                                            style={isActive ? { animationDelay: `${1.1 + (i * 0.1)}s`, animationFillMode: 'forwards' } : {}}
-                                        >
-                                            <SystemDot variant="Azul" />
-                                        </div>
+                                        <EditableText
+                                            value={week.title}
+                                            onChange={(val) => {
+                                                if (!slideId) return;
+                                                const newWeeks = [...displayWeeks];
+                                                newWeeks[index] = { ...newWeeks[index], title: val };
+                                                updateSlideData(slideId, { weeks: newWeeks });
+                                            }}
+                                            className="font-bold text-gray-900 text-[1.8vh]"
+                                            editable={editable}
+                                        />
                                     </div>
-                                ))}
-                            </div>
-                        </div>
+                                    <EditableText
+                                        value={week.mainActivity || "Atividade Principal"}
+                                        onChange={(val) => {
+                                            if (!slideId) return;
+                                            const newWeeks = [...displayWeeks];
+                                            newWeeks[index] = { ...newWeeks[index], mainActivity: val };
+                                            updateSlideData(slideId, { weeks: newWeeks });
+                                        }}
+                                        className="text-xs text-gray-500 line-clamp-2 pl-11"
+                                        editable={editable}
+                                    />
+                                </div>
 
-                        {/* Bars Area */}
-                        <div className="relative flex flex-col gap-3 min-h-[40vh] py-4">
-                            {/* Grid Columns */}
-                            <div className="absolute inset-0 grid grid-cols-6 pointer-events-none">
-                                {Array.from({ length: 6 }).map((_, i) => (
-                                    <div key={i} className="border-r border-white/5 last:border-0 h-full" />
-                                ))}
-                            </div>
+                                {/* Timeline Bar */}
+                                <div className="flex-1 relative h-12 bg-gray-100/50 rounded-lg overflow-hidden border border-gray-100">
+                                    <div className="absolute inset-0 grid grid-cols-12 gap-1 pointer-events-none">
+                                        {Array.from({ length: 12 }).map((_, i) => (
+                                            <div key={i} className="border-r border-gray-200/50 h-full" />
+                                        ))}
+                                    </div>
 
-                            {(workPlan.phases || []).map((phase: any, index: number) => {
-                                const variant: TagVariant = phase.color === 'purple' ? 'Roxo' : 'Azul';
-
-                                // Calculation for positioning
-                                const left = `${(phase.start / 6) * 100}%`;
-                                const width = `${(phase.width / 6) * 100}%`;
-
-                                return (
+                                    {/* Simple Bar Visualization */}
+                                    {/* This is a visual approximation. Real impl needs real dates */}
                                     <div
-                                        key={index}
-                                        className={`relative h-[41px] flex items-center ${isActive ? "animate-growRight opacity-0" : "opacity-0"} origin-left`}
+                                        className={`absolute top-2 bottom-2 rounded-md shadow-sm flex items-center px-3 text-xs font-medium text-white transition-all hover:scale-[1.02]`}
                                         style={{
-                                            left: left,
-                                            width: width,
-                                            animationDelay: isActive ? `${1.6 + (index * 0.2)}s` : '0s',
-                                            animationFillMode: 'forwards'
+                                            left: `${(index * (100 / 6))}%`, // roughly 6 phases max visible? Or just mapping index to %
+                                            width: '25%', // fixed width 
+                                            background: index % 2 === 0 ? 'linear-gradient(90deg, #2563eb, #3b82f6)' : 'linear-gradient(90deg, #9333ea, #a855f7)'
                                         }}
                                     >
-                                        <div className="w-full h-full relative group/phase">
-                                            <Tags
-                                                label={phase.label}
-                                                variant={variant}
-                                                className="w-full h-full shadow-lg"
-                                            />
-                                            {editable && (
-                                                <div className="absolute inset-0 opacity-0 group-hover/phase:opacity-100 flex items-center justify-center bg-black/50 backdrop-blur-sm rounded-lg transition-opacity">
-                                                    <EditableText
-                                                        value={phase.label}
-                                                        onChange={(val) => {
-                                                            const newPhases = [...workPlan.phases];
-                                                            newPhases[index] = { ...newPhases[index], label: val };
-                                                            updateSlideData('workPlan', { phases: newPhases });
-                                                        }}
-                                                        className="text-white text-xs font-bold"
-                                                        editable={editable}
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
+                                        <span className="truncate drop-shadow-md">Execução</span>
                                     </div>
-                                );
-                            })}
+                                </div>
+                            </div>
+                        )
+                    })}
+                </div>
+
+                {/* Footer Legend */}
+                <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center text-xs text-gray-500">
+                    <div className="flex gap-4">
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded bg-blue-500" /> Planejamento
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded bg-purple-500" /> Execução
                         </div>
                     </div>
-                </GlassBox>
+                    <div>
+                        Estimativa Total: <span className="font-bold text-gray-900">~12 Semanas</span>
+                    </div>
+                </div>
             </div>
+
+            {/* Render Extra Content (Draggable Texts) */}
+            {extraContent?.map((item) => (
+                <Rnd
+                    key={item.id}
+                    default={{
+                        x: 0,
+                        y: 0,
+                        width: 300,
+                        height: 50
+                    }}
+                    position={item.style?.position || { x: 100, y: 100 }}
+                    onDragStop={(e, d) => {
+                        // Update position logic would go here if we stored x/y in structure
+                    }}
+                    bounds="parent"
+                    enableResizing={false}
+                    className="z-50"
+                >
+                    <div className="relative group">
+                        <EditableText
+                            value={item.content}
+                            onChange={(val) => slideId && updateExtraContent(slideId, item.id, val)}
+                            className="text-white text-xl font-bold bg-black/50 p-2 rounded backdrop-blur-sm border border-white/10"
+                            editable={editable}
+                        />
+                    </div>
+                </Rnd>
+            ))}
         </div>
     );
 }

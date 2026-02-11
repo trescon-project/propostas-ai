@@ -92,18 +92,30 @@ const ASSETS = {
 
 import { useProposal } from '@/contexts/ProposalContext';
 import EditableText from '@/components/ui/EditableText';
+import { Rnd } from 'react-rnd';
 
 interface MethodologySlideProps {
+    title?: string;
+    steps?: any[];
     className?: string;
     editable?: boolean;
+    slideId?: string;
+    extraContent?: any[];
 }
 
 export default function MethodologySlide({
+    title,
+    steps,
     className,
-    editable = false
+    editable = false,
+    slideId,
+    extraContent
 }: MethodologySlideProps) {
-    const { data, updateSlideData } = useProposal();
-    const { methodology } = data.slides;
+    const { updateSlideData, updateExtraContent } = useProposal();
+
+    // Default values
+    const displayTitle = title || "Nossa Metodologia";
+    const displaySteps = steps || [];
 
     return (
         <div className={`relative w-full h-full overflow-hidden font-poppins bg-[#000528] ${className}`}>
@@ -125,8 +137,8 @@ export default function MethodologySlide({
             <div className="absolute top-[8%] left-[6%] z-20">
                 <EditableText
                     tagName="h1"
-                    value={methodology.title}
-                    onChange={(val) => updateSlideData('methodology', { title: val })}
+                    value={displayTitle}
+                    onChange={(val) => slideId && updateSlideData(slideId, { title: val })}
                     className="text-[6vh] font-bold text-white border-b border-white/10"
                     editable={editable}
                 />
@@ -161,13 +173,23 @@ export default function MethodologySlide({
                     }}
                     className="w-full h-full !overflow-visible"
                 >
-                    {(methodology.steps || []).map((stepData, index) => {
+                    {(displaySteps.length > 0 ? displaySteps : STEPS).map((stepData, index) => {
                         // Merge with static config to keep icons/colors
-                        const staticStep = STEPS[index] || STEPS[0];
+                        // If using default STEPS, stepData is the full object.
+                        // If using props steps, we might need to match with STEPS logic or just use what's there.
+                        // For simplicity in this refactor, let's assume props.steps might be sparse or we map by index.
+
+                        const staticStep = STEPS[index % STEPS.length];
                         const StepIcon = staticStep.icon;
                         const isPurple = staticStep.tagVariant === 'Roxo';
 
-                        // Use dynamic data if available, fallback to static
+                        // Use dynamic data if available, fallback to static/current item
+                        // If displaySteps comes from props, it might just have {label, description}.
+                        // If it comes from STEPS constant, it has everything.
+
+                        // We need to handle both cases securely. 
+                        // Let's rely on the object passed in map.
+
                         const label = stepData.label || staticStep.label;
                         const description = stepData.description || staticStep.description;
                         const color = staticStep.color;
@@ -204,9 +226,12 @@ export default function MethodologySlide({
                                                 tagName="h3"
                                                 value={label}
                                                 onChange={(val) => {
-                                                    const newSteps = [...methodology.steps];
+                                                    if (!slideId) return;
+                                                    // Ensure we have a steps array to mutate
+                                                    const newSteps = [...(displaySteps.length ? displaySteps : STEPS)];
+                                                    // Ensure object exists at index
                                                     newSteps[index] = { ...newSteps[index], label: val };
-                                                    updateSlideData('methodology', { steps: newSteps });
+                                                    updateSlideData(slideId, { steps: newSteps });
                                                 }}
                                                 className="text-[4vh] font-bold text-white border-b border-white/10"
                                                 editable={editable}
@@ -228,9 +253,10 @@ export default function MethodologySlide({
                                             tagName="p"
                                             value={description}
                                             onChange={(val) => {
-                                                const newSteps = [...methodology.steps];
+                                                if (!slideId) return;
+                                                const newSteps = [...(displaySteps.length ? displaySteps : STEPS)];
                                                 newSteps[index] = { ...newSteps[index], description: val };
-                                                updateSlideData('methodology', { steps: newSteps });
+                                                updateSlideData(slideId, { steps: newSteps });
                                             }}
                                             className="border-b border-white/10"
                                             editable={editable}
@@ -268,6 +294,35 @@ export default function MethodologySlide({
                     <ArrowForwardIos sx={{ fontSize: 20 }} />
                 </button>
             </div>
+
+            {/* Render Extra Content (Draggable Texts) */}
+            {extraContent?.map((item) => (
+                <Rnd
+                    key={item.id}
+                    default={{
+                        x: 0,
+                        y: 0,
+                        width: 300,
+                        height: 50
+                    }}
+                    position={item.style?.position || { x: 100, y: 100 }}
+                    onDragStop={(e, d) => {
+                        // Update position logic would go here if we stored x/y in structure
+                    }}
+                    bounds="parent"
+                    enableResizing={false}
+                    className="z-50"
+                >
+                    <div className="relative group">
+                        <EditableText
+                            value={item.content}
+                            onChange={(val) => slideId && updateExtraContent(slideId, item.id, val)}
+                            className="text-white text-xl font-bold bg-black/50 p-2 rounded backdrop-blur-sm border border-white/10"
+                            editable={editable}
+                        />
+                    </div>
+                </Rnd>
+            ))}
         </div>
     );
 }

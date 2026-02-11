@@ -11,7 +11,7 @@ export async function generateProposalAction(context: string) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash', generationConfig: { responseMimeType: "application/json" } });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash', generationConfig: { responseMimeType: "application/json" } });
 
     const prompt = `
     Você é um Arquiteto de Soluções e Especialista em Vendas B2B.
@@ -20,98 +20,90 @@ export async function generateProposalAction(context: string) {
     CONTEXTO:
     "${context}"
 
-    Gere um JSON estritamente com a seguinte estrutura para preencher os slides da proposta. 
-    Seja persuasivo, profissional e use termos técnicos adequados.
+    Gere um JSON estritamente com a estrutura de um ARRAY de objetos (slides).
+    Cada objeto deve ter "type" (string) e "content" (objeto).
     
-    ESTRUTURA JSON:
-    {
-      "home": {
-        "title": "Título curto e impactante da proposta",
-        "subtitle": "Subtítulo focado em valor",
-        "date": "Data no formato DD/MM/YYYY"
-      },
-      "challenge": {
-        "title": "Título do Slide de Desafio (ex: O Cenário Atual)",
-        "description": "Descrição concisa do problema/dor do cliente (max 30 palavras para caber no slide).",
-        "points": ["Causa de dor ou ineficiência 1", "Causa de dor ou ineficiência 2", "Causa de dor ou ineficiência 3"]
-      },
-      "solution": {
-        "title": "Título da Solução (ex: Arquitetura Cloud Native)",
-        "description": "Descrição da solução técnica e estratégica proposta (max 60 palavras).",
-        "features": [
-           { "title": "Destaque 1", "description": "Breve detalhe" },
-           { "title": "Destaque 2", "description": "Breve detalhe" }
-        ]
-      },
-      "pricing": {
-        "totalValue": "Valor estimado (ex: R$ 150.000,00)",
-        "features": ["Benefício 1 (ex: Time Senior)", "Benefício 2 (ex: 4 Semanas)"],
-        "deliverables": [
-          { "title": "Entregável 1", "description": "Descrição curta" },
-          { "title": "Entregável 2", "description": "Descrição curta" },
-          { "title": "Entregável 3", "description": "Descrição curta" }
-        ]
-      },
-      "methodology": {
-        "title": "Nossa Abordagem",
-        "steps": [
-            { "id": "discovery", "label": "Discovery", "description": "Descrição adaptada ao contexto do cliente" },
-            { "id": "definicao", "label": "Definição", "description": "Descrição adaptada" },
-            { "id": "desenvolvimento", "label": "Desenvolvimento", "description": "Descrição adaptada" },
-            { "id": "entrega", "label": "Entrega", "description": "Descrição adaptada" },
-            { "id": "acompanhamento", "label": "Acompanhamento", "description": "Descrição adaptada" }
-        ]
-      },
-      "workPlan": {
-        "title": "Plano de Trabalho",
-        "weeks": [
-            { "label": "SEMANA 1", "date": "Data estimada" },
-            { "label": "SEMANA 2", "date": "Data estimada" },
-            { "label": "SEMANA 3", "date": "Data estimada" },
-            { "label": "SEMANA 4", "date": "Data estimada" },
-            { "label": "SEMANA 5", "date": "Data estimada" },
-            { "label": "SEMANA 6", "date": "Data estimada" }
-        ],
-        "phases": [
-            { "label": "Imersão", "start": 0.1, "width": 0.8, "color": "purple" },
-            { "label": "Execução", "start": 1.1, "width": 3.8, "color": "blue" },
-            { "label": "Encerramento", "start": 5.1, "width": 0.8, "color": "purple" }
-        ]
-      },
-      "weeklyDetails": [
-        {
-            "id": 1,
-            "title": "Fase Inicial",
-            "subtitle": "Subtítulo da semana 1",
-            "actions": ["Ação 1", "Ação 2"],
-            "deliverables": ["Entregável da semana"],
-            "team3con": ["Papel 1", "Papel 2"],
-            "teamClient": ["Papel 1"]
-        },
-        {
-            "id": 2,
-            "title": "Fase de Execução",
-            "subtitle": "Subtítulo da semana 2",
-            "actions": ["Ação 1", "Ação 2"],
-            "deliverables": ["Entregável da semana"],
-            "team3con": ["Papel 1", "Papel 2"],
-            "teamClient": ["Papel 1"]
+    ESTRUTURA JSON (Array):
+    [
+      {
+        "type": "home",
+        "content": {
+          "title": "Título curto e impactante",
+          "subtitle": "Subtítulo de valor",
+          "date": "Data (DD/MM/YYYY)"
         }
-      ]
-    }
-  `;
+      },
+      {
+        "type": "challenge",
+        "content": {
+          "title": "O Cenário / Desafio",
+          "description": "Descrição do problema (max 30 palavras)",
+          "points": ["Dor 1", "Dor 2", "Dor 3"]
+        }
+      },
+      {
+        "type": "solution",
+        "content": {
+          "title": "Nossa Solução",
+          "description": "Resumo da solução (max 60 palavras)",
+          "features": [
+            { "title": "Destaque 1", "description": "Detalhe" },
+            { "title": "Destaque 2", "description": "Detalhe" }
+          ]
+        }
+      },
+      {
+        "type": "methodology",
+        "content": {
+          "title": "Nossa Abordagem",
+          "steps": [
+             { "label": "Discovery", "description": "Descrição..." },
+             { "label": "Definição", "description": "Descrição..." },
+             { "label": "Desenvolvimento", "description": "Descrição..." },
+             { "label": "Entrega", "description": "Descrição..." },
+             { "label": "Acompanhamento", "description": "Descrição..." }
+          ]
+        }
+      },
+      {
+        "type": "pricing",
+        "content": {
+          "title": "Investimento",
+          "totalValue": "R$ Valor",
+          "features": ["Benefício 1", "Benefício 2"],
+          "deliverables": ["Entregável 1", "Entregável 2"]
+        }
+      },
+      {
+        "type": "work_plan",
+        "content": {
+          "title": "Cronograma",
+          "weeks": [
+             { "title": "Fase 1", "mainActivity": "Atividade chave" },
+             { "title": "Fase 2", "mainActivity": "Atividade chave" },
+             { "title": "Fase 3", "mainActivity": "Atividade chave" }
+          ]
+        }
+      }
+    ]
+    `;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
-    console.log("Gemini Raw Response:", text);
 
-    // Clean up markdown code blocks if present
+    // Clean up
     const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    const slidesData = JSON.parse(cleanText);
 
-    // Parse JSON safely
-    const data = JSON.parse(cleanText);
-    return { success: true, data };
+    // Ensure IDs are present
+    const slidesWithIds = Array.isArray(slidesData) ? slidesData.map((slide: any) => ({
+      ...slide,
+      id: Math.random().toString(36).substring(2, 9) + Date.now().toString(36),
+      extraContent: []
+    })) : [];
+
+    return { success: true, data: slidesWithIds };
 
   } catch (error) {
     console.error('Gemini API Error:', error);
