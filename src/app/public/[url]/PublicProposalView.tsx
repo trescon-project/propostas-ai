@@ -2,14 +2,10 @@
 
 import React from 'react';
 import { useProposal } from '@/contexts/ProposalContext';
-import { getTemplateFn } from '@/config/templates';
+import { SLIDE_COMPONENTS } from '@/config/slideMappings';
 
 export default function PublicProposalView() {
     const { data } = useProposal();
-
-    // Resolve template dynamically
-    const templateId = (data.slides as any)?.templateId || 'default';
-    const template = getTemplateFn(templateId);
 
     return (
         <div className="w-full h-screen bg-[#000528] overflow-y-auto overflow-x-hidden snap-y snap-mandatory scroll-smooth">
@@ -21,29 +17,19 @@ export default function PublicProposalView() {
             </div>
 
             {/* Slides rendered vertically */}
-            {template.slides.map((slideConfig, index) => {
-                const SlideComponent = slideConfig.component;
+            {data.slides.map((slide) => {
+                const SlideComponent = SLIDE_COMPONENTS[slide.type];
 
-                // Handle Drilldown Slides (e.g. Weekly Details)
-                if (slideConfig.drilldownKey) {
-                    const items = ((data.slides as any)[slideConfig.drilldownKey] as any[]) || [];
-                    return items.map((item, itemIdx) => {
-                        // Dynamic props based on known drilldown types
-                        const drilldownProps = slideConfig.drilldownKey === 'weeklyDetails'
-                            ? { week: item }
-                            : { data: item };
-
-                        return (
-                            <section key={`${slideConfig.name}-${item.id || itemIdx}`} className="w-full h-screen relative flex-shrink-0 snap-start">
-                                <SlideComponent {...drilldownProps} />
-                            </section>
-                        );
-                    });
-                }
+                if (!SlideComponent) return null;
 
                 return (
-                    <section key={`${slideConfig.name}-${index}`} className="w-full h-screen relative flex-shrink-0 snap-start">
-                        <SlideComponent />
+                    <section key={slide.id} className="w-full h-screen relative flex-shrink-0 snap-start">
+                        <SlideComponent
+                            {...slide.content}
+                            editable={false}
+                            slideId={slide.id}
+                            extraContent={slide.extraContent}
+                        />
                     </section>
                 );
             })}

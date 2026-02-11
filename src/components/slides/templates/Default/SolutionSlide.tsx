@@ -7,23 +7,29 @@ const ASSETS = {
 
 import { useProposal } from '@/contexts/ProposalContext';
 import EditableText from '@/components/ui/EditableText';
+import DraggableBlock from '@/components/slides/DraggableBlock';
+// import { Rnd } from 'react-rnd'; // No longer needed directly
 
 interface SolutionSlideProps {
     title?: string;
     description?: string;
     className?: string;
     editable?: boolean;
+    slideId?: string;
+    extraContent?: any[];
 }
 
 export default function SolutionSlide({
     title,
     description,
     className,
-    editable = false
+    editable = false,
+    slideId,
+    extraContent
 }: SolutionSlideProps) {
-    const { data, updateSlideData } = useProposal();
-    const displayTitle = title || data.slides.solution.title;
-    const displayDescription = description || data.slides.solution.description;
+    const { updateSlideData, updateExtraContent } = useProposal();
+    const displayTitle = title || "Nossa Solução";
+    const displayDescription = description || "Visão geral da solução proposta...";
 
     return (
         <div
@@ -57,7 +63,7 @@ export default function SolutionSlide({
                         <EditableText
                             tagName="h2"
                             value={displayTitle}
-                            onChange={(val) => updateSlideData('solution', { title: val })}
+                            onChange={(val) => slideId && updateSlideData(slideId, { title: val })}
                             className="text-[4vh] font-bold leading-tight border-b border-white/10"
                             editable={editable}
                         />
@@ -68,7 +74,7 @@ export default function SolutionSlide({
                         <EditableText
                             tagName="p"
                             value={displayDescription}
-                            onChange={(val) => updateSlideData('solution', { description: val })}
+                            onChange={(val) => slideId && updateSlideData(slideId, { description: val })}
                             className="text-[2.2vh] leading-relaxed font-light whitespace-pre-wrap border-b border-white/10"
                             editable={editable}
                         />
@@ -76,6 +82,16 @@ export default function SolutionSlide({
 
                 </div>
             </div>
+
+            {/* Render Extra Content (Draggable Texts) */}
+            {extraContent?.map((item) => (
+                <DraggableBlock
+                    key={item.id}
+                    slideId={slideId || ''}
+                    item={item}
+                    editable={editable}
+                />
+            ))}
         </div>
     );
 }

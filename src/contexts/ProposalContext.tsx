@@ -1,9 +1,25 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { SLIDE_DEFAULTS } from '@/config/slideMappings';
+
+// Define the shape of a single slide
+export interface Slide {
+    id: string;
+    type: string; // e.g., 'home', 'challenge', 'generic'
+    content: any;
+    extraContent?: {
+        id: string;
+        type: 'text' | 'image';
+        content: string;
+        style?: React.CSSProperties & { x?: number; y?: number };
+    }[];
+}
 
 // Define the shape of the proposal data
 export interface ProposalData {
+    id?: string;
+    user_id?: string;
     meta: {
         title: string;
         customUrl: string;
@@ -11,45 +27,7 @@ export interface ProposalData {
         date: string;
         status: string;
     };
-    slides: {
-        home: {
-            title: string;
-            subtitle: string;
-        };
-        challenge: {
-            title: string;
-            description: string;
-            points: string[];
-        };
-        solution: {
-            title: string;
-            description: string;
-            features: { title: string; description: string }[];
-        };
-        pricing: {
-            totalValue: string;
-            features: string[];
-            deliverables: { title: string; description: string }[];
-        };
-        methodology: {
-            title: string;
-            steps: { id: string; label: string; description: string }[];
-        };
-        workPlan: {
-            title: string;
-            phases: { label: string; start: number; width: number; color: string }[];
-            weeks: { label: string; date: string }[];
-        };
-        weeklyDetails: {
-            id: number;
-            title: string;
-            subtitle: string;
-            actions: string[];
-            deliverables: string[];
-            team3con: string[];
-            teamClient: string[];
-        }[];
-    };
+    slides: Slide[];
     aiContext: string;
 }
 
@@ -57,65 +35,45 @@ export interface ProposalData {
 const defaultProposalData: ProposalData = {
     meta: {
         title: 'Transformação Digital 2024',
-        customUrl: 'transformacao-digital',
+        customUrl: `proposta-${new Date().getTime()}`,
         companyName: 'Acme Corp',
         date: '08/02/2026',
         status: 'rascunho',
     },
-    slides: {
-        home: {
-            title: 'Transformação Digital',
-            subtitle: 'Estratégia para o Futuro',
+    slides: [
+        {
+            id: 'slide-home',
+            type: 'home',
+            content: {
+                title: 'Transformação Digital',
+                subtitle: 'Estratégia para o Futuro',
+            }
         },
-        challenge: {
-            title: 'O Desafio',
-            description: 'Descrição do desafio atual...',
-            points: ['Ponto de dor 1', 'Ponto de dor 2'],
+        {
+            id: 'slide-challenge',
+            type: 'challenge',
+            content: {
+                title: 'O Desafio',
+                description: 'Descrição do desafio atual...',
+                points: ['Ponto de dor 1', 'Ponto de dor 2'],
+            }
         },
-        solution: {
-            title: 'Nossa Solução',
-            description: 'Visão geral da solução proposta...',
-            features: [
-                { title: 'Feature 1', description: 'Detalhes...' },
-            ],
+        {
+            id: 'slide-solution',
+            type: 'solution',
+            content: {
+                title: 'Nossa Solução',
+                description: 'Visão geral da solução proposta...',
+                features: [
+                    { title: 'Feature 1', description: 'Detalhes...' },
+                ],
+            }
         },
-        pricing: {
-            totalValue: 'R$ 294.102,03',
-            features: ['Time Expert', '6 Semanas'],
-            deliverables: [
-                { title: 'Documento AS IS', description: 'Análise completa' },
-                { title: 'Visão TO BE', description: 'Roadmap detalhado' },
-                { title: 'Proposta Executiva', description: 'Passos futuros' },
-            ],
-        },
-        methodology: {
-            title: 'Nossa Abordagem',
-            steps: [
-                { id: 'discovery', label: 'Discovery', description: 'Análise aprofundada...' },
-                { id: 'definicao', label: 'Definição', description: 'Detalhamento técnico...' },
-                { id: 'desenvolvimento', label: 'Desenvolvimento', description: 'Squads de modernização...' },
-                { id: 'entrega', label: 'Entrega', description: 'Procedimentos de qualidade...' },
-                { id: 'acompanhamento', label: 'Acompanhamento', description: 'Suporte continuado...' },
-            ]
-        },
-        workPlan: {
-            title: 'Plano de Trabalho',
-            weeks: [
-                { label: 'SEMANA 1', date: '02/02 - 06/02' },
-                { label: 'SEMANA 2', date: '09/02 - 13/02' },
-                { label: 'SEMANA 3', date: '16/02 - 20/02' },
-                { label: 'SEMANA 4', date: '23/02 - 27/02' },
-                { label: 'SEMANA 5', date: '02/03 - 06/03' },
-                { label: 'SEMANA 6', date: '09/03 - 13/03' }
-            ],
-            phases: [
-                { label: 'Imersão', start: 0.1, width: 0.8, color: 'purple' },
-                { label: 'AS IS Técnico', start: 1.1, width: 1.4, color: 'blue' },
-                { label: 'AS IS de Negócio', start: 1.1, width: 2.8, color: 'purple' },
-            ]
-        },
-        weeklyDetails: [
-            {
+
+        {
+            id: 'slide-weekly-1',
+            type: 'work_plan_drilldown',
+            content: {
                 id: 1,
                 title: 'Discovery & Imersão',
                 subtitle: 'Entendimento do cenário atual e objetivos',
@@ -123,18 +81,40 @@ const defaultProposalData: ProposalData = {
                 deliverables: ['Plano de Projeto'],
                 team3con: ['Gerente de Projeto', 'Arquiteto'],
                 teamClient: ['PO', 'Stakeholders']
-            },
-            // Add more default weeks as needed
-        ]
-    },
-    aiContext: '', // Input from the sidebar
+            }
+        },
+        {
+            id: 'slide-pricing',
+            type: 'pricing',
+            content: {
+                totalValue: 'R$ 294.102,03',
+                features: ['Time Expert', '6 Semanas'],
+                deliverables: [
+                    { title: 'Documento AS IS', description: 'Análise completa' },
+                    { title: 'Visão TO BE', description: 'Roadmap detalhado' },
+                    { title: 'Proposta Executiva', description: 'Passos futuros' },
+                ],
+            }
+        }
+    ],
+    aiContext: '',
 };
 
 interface ProposalContextType {
     data: ProposalData;
     updateData: (newData: Partial<ProposalData>) => void;
-    updateSlideData: (slideKey: keyof ProposalData['slides'], newData: any) => void;
+    updateSlideData: (slideId: string, newData: any) => void;
     updateMeta: (key: keyof ProposalData['meta'], value: string) => void;
+
+    addSlide: (type: Slide['type'], index?: number, initialContent?: any) => void;
+    removeSlide: (slideId: string) => void;
+    duplicateSlide: (slideId: string) => void;
+    moveSlide: (dragIndex: number, hoverIndex: number) => void;
+    addExtraContent: (slideId: string, type: 'text') => void;
+    updateExtraContent: (slideId: string, contentId: string, content: string) => void;
+    updateExtraContentPosition: (slideId: string, contentId: string, x: number, y: number) => void;
+    removeExtraContent: (slideId: string, contentId: string) => void;
+
     setAiContext: (context: string) => void;
     saveToSupabase: () => Promise<{ success: boolean; error?: string }>;
     isLoading: boolean;
@@ -149,25 +129,154 @@ export function ProposalProvider({
     children: ReactNode;
     initialData?: ProposalData;
 }) {
-    const [data, setData] = useState<ProposalData>(initialData || defaultProposalData);
+    const [data, setData] = useState<ProposalData>(() => {
+        // Handle migration from old format if initialData is provided but has old structure
+        if (initialData && !Array.isArray(initialData.slides)) {
+            console.warn("Migrating old proposal data structure...");
+            // Use default because migrating logic is complex and best handled by a proper transformation function 
+            // or just accepting that old drafts might reset to default structure for this refactor
+            return defaultProposalData;
+        }
+        return initialData || defaultProposalData;
+    });
     const [isLoading, setIsLoading] = useState(false);
 
     const updateData = (newData: Partial<ProposalData>) => {
         setData((prev) => ({ ...prev, ...newData }));
     };
 
-    const updateSlideData = (slideKey: keyof ProposalData['slides'], newData: any) => {
+    const updateSlideData = (slideId: string, newData: any) => {
         setData((prev) => ({
             ...prev,
-            slides: {
-                ...prev.slides,
-                [slideKey]: {
-                    ...prev.slides[slideKey],
-                    ...newData,
-                },
-            },
+            slides: prev.slides.map(slide =>
+                slide.id === slideId
+                    ? { ...slide, content: { ...slide.content, ...newData } }
+                    : slide
+            ),
         }));
     };
+
+    const addSlide = (type: Slide['type'], index?: number, initialContent?: any) => {
+        const newSlide: Slide = {
+            id: `slide-${type}-${Date.now()}`,
+            type,
+            content: initialContent || SLIDE_DEFAULTS[type] || {},
+        };
+
+        setData(prev => {
+            const newSlides = [...prev.slides];
+            if (typeof index === 'number') {
+                newSlides.splice(index, 0, newSlide);
+            } else {
+                newSlides.push(newSlide);
+            }
+            return { ...prev, slides: newSlides };
+        });
+    };
+
+    const removeSlide = (slideId: string) => {
+        setData(prev => ({
+            ...prev,
+            slides: prev.slides.filter(s => s.id !== slideId)
+        }));
+    };
+
+    const duplicateSlide = (slideId: string) => {
+        setData(prev => {
+            const index = prev.slides.findIndex(s => s.id === slideId);
+            if (index === -1) return prev;
+
+            const original = prev.slides[index];
+            const duplicate: Slide = {
+                ...original,
+                id: `slide-${original.type}-${Date.now()}`,
+                content: JSON.parse(JSON.stringify(original.content)), // Deep copy content
+                extraContent: original.extraContent ? JSON.parse(JSON.stringify(original.extraContent)) : undefined
+            };
+
+            const newSlides = [...prev.slides];
+            newSlides.splice(index + 1, 0, duplicate);
+            return { ...prev, slides: newSlides };
+        });
+    };
+
+    const moveSlide = (dragIndex: number, hoverIndex: number) => {
+        setData(prev => {
+            const newSlides = [...prev.slides];
+            const [draggedItem] = newSlides.splice(dragIndex, 1);
+            newSlides.splice(hoverIndex, 0, draggedItem);
+            return { ...prev, slides: newSlides };
+        });
+    };
+
+
+    const addExtraContent = (slideId: string, type: 'text') => {
+        setData(prev => ({
+            ...prev,
+            slides: prev.slides.map(slide => {
+                if (slide.id !== slideId) return slide;
+
+                const newExtra = {
+                    id: `extra-${Date.now()}`,
+                    type,
+                    content: 'Novo texto...',
+                    style: { x: 100, y: 100 } // Default position
+                };
+
+                return {
+                    ...slide,
+                    extraContent: [...(slide.extraContent || []), newExtra]
+                };
+            })
+        }));
+    };
+
+    const updateExtraContent = (slideId: string, contentId: string, content: string) => {
+        setData(prev => ({
+            ...prev,
+            slides: prev.slides.map(slide => {
+                if (slide.id !== slideId) return slide;
+
+                return {
+                    ...slide,
+                    extraContent: (slide.extraContent || []).map(item =>
+                        item.id === contentId ? { ...item, content } : item
+                    )
+                };
+            })
+        }));
+    };
+
+    const updateExtraContentPosition = (slideId: string, contentId: string, x: number, y: number) => {
+        setData(prev => ({
+            ...prev,
+            slides: prev.slides.map(slide => {
+                if (slide.id !== slideId) return slide;
+
+                return {
+                    ...slide,
+                    extraContent: (slide.extraContent || []).map(item =>
+                        item.id === contentId ? { ...item, style: { ...item.style, x, y } } : item
+                    )
+                };
+            })
+        }));
+    };
+
+    const removeExtraContent = (slideId: string, contentId: string) => {
+        setData(prev => ({
+            ...prev,
+            slides: prev.slides.map(slide => {
+                if (slide.id !== slideId) return slide;
+
+                return {
+                    ...slide,
+                    extraContent: (slide.extraContent || []).filter(item => item.id !== contentId)
+                };
+            })
+        }));
+    };
+
 
     const updateMeta = (key: keyof ProposalData['meta'], value: string) => {
         setData((prev) => ({
@@ -187,9 +296,6 @@ export function ProposalProvider({
         setIsLoading(true);
         try {
             // This would be a server action or direct client call
-            console.log("Saving to Supabase...", data);
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
             return { success: true };
         } catch (error) {
             return { success: false, error: 'Falha ao salvar' };
@@ -199,7 +305,23 @@ export function ProposalProvider({
     };
 
     return (
-        <ProposalContext.Provider value={{ data, updateData, updateSlideData, updateMeta, setAiContext, saveToSupabase, isLoading }}>
+        <ProposalContext.Provider value={{
+            data,
+            updateData,
+            updateSlideData,
+            updateMeta,
+            setAiContext,
+            saveToSupabase,
+            isLoading,
+            addSlide,
+            removeSlide,
+            duplicateSlide,
+            moveSlide,
+            addExtraContent,
+            updateExtraContent,
+            updateExtraContentPosition,
+            removeExtraContent
+        }}>
             {children}
         </ProposalContext.Provider>
     );

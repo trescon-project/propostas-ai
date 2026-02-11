@@ -20,11 +20,8 @@ export default function TemplatesPage() {
             const uniqueId = Math.random().toString(36).substring(2, 8)
             const slug = `${template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${uniqueId}`
 
-            // Store templateId in the content JSON
-            const initialContent = {
-                templateId: template.id,
-                ...template.defaultContent
-            }
+            // Store slides directly
+            const initialContent = template.content || [];
 
             const { data: newProposal, error } = await supabase
                 .from('proposals')

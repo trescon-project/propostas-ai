@@ -6,20 +6,34 @@ const ASSETS = {
 
 import { useProposal } from '@/contexts/ProposalContext';
 import EditableText from '@/components/ui/EditableText';
+import DraggableBlock from '@/components/slides/DraggableBlock';
+// import { Rnd } from 'react-rnd'; // No longer needed directly
 
 interface ChallengeSlideProps {
-    proposalTitle?: string;
+    title?: string;
+    description?: string;
+    points?: string[];
     className?: string;
     editable?: boolean;
+    slideId?: string;
+    extraContent?: any[];
 }
 
 export default function ChallengeSlide({
-    proposalTitle,
+    title,
+    description,
+    points,
     className,
-    editable = false
+    editable = false,
+    slideId,
+    extraContent
 }: ChallengeSlideProps) {
-    const { data, updateMeta, updateSlideData } = useProposal();
-    const displayTitle = proposalTitle || data.meta.title;
+    const { updateSlideData, updateExtraContent } = useProposal();
+
+    // Fallback content if props are missing (e.g. during initial load or transition)
+    const displayTitle = title || "O Desafio";
+    const displayDescription = description || "Descrição do desafio atual...";
+    const displayPoints = points || ['Ponto de dor 1', 'Ponto de dor 2'];
 
     return (
         <div className={`relative w-full h-full bg-black overflow-hidden font-poppins ${className}`}>
@@ -43,30 +57,31 @@ export default function ChallengeSlide({
 
                 <EditableText
                     tagName="h1"
-                    value={data.slides.challenge.title}
-                    onChange={(val) => updateSlideData('challenge', { title: val })}
+                    value={displayTitle}
+                    onChange={(val) => slideId && updateSlideData(slideId, { title: val })}
                     className="text-[6vh] font-bold text-white leading-tight animate-slideUp border-b border-white/10"
                     editable={editable}
                 />
 
                 <EditableText
                     tagName="p"
-                    value={data.slides.challenge.description}
-                    onChange={(val) => updateSlideData('challenge', { description: val })}
+                    value={displayDescription}
+                    onChange={(val) => slideId && updateSlideData(slideId, { description: val })}
                     className="text-[2.5vh] text-white/80 max-w-2xl animate-fadeIn border-b border-white/10"
                     editable={editable}
                 />
 
                 <div className="flex flex-col gap-2 mt-4">
-                    {(data.slides.challenge.points || []).map((point, idx) => (
+                    {displayPoints.map((point, idx) => (
                         <div key={idx} className="flex items-center gap-3 text-[2vh] text-white animate-slideRight" style={{ animationDelay: `${idx * 100}ms` }}>
                             <span className="w-2 h-2 rounded-full bg-[#0b95da]" />
                             <EditableText
                                 value={point}
                                 onChange={(val) => {
-                                    const newPoints = [...data.slides.challenge.points];
+                                    if (!slideId) return;
+                                    const newPoints = [...displayPoints];
                                     newPoints[idx] = val;
-                                    updateSlideData('challenge', { points: newPoints });
+                                    updateSlideData(slideId, { points: newPoints });
                                 }}
                                 className="border-b border-white/10"
                                 editable={editable}
@@ -75,6 +90,16 @@ export default function ChallengeSlide({
                     ))}
                 </div>
             </div>
+
+            {/* Render Extra Content (Draggable Texts) */}
+            {extraContent?.map((item) => (
+                <DraggableBlock
+                    key={item.id}
+                    slideId={slideId || ''}
+                    item={item}
+                    editable={editable}
+                />
+            ))}
         </div>
     );
 }

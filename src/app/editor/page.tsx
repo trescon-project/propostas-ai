@@ -1,36 +1,35 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useProposal } from '@/contexts/ProposalContext';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Mousewheel, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-import { getTemplateFn } from '@/config/templates';
-import { generateProposalAction } from '@/app/actions/generateProposal';
-
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
-import { Download, AutoAwesome, Save, Share, Dashboard } from '@mui/icons-material';
-import { saveProposalAction } from '@/app/actions/saveProposal';
-import { trackAccessAction } from '@/app/actions/trackAccess';
-import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { saveProposalAction } from '@/app/actions/saveProposal';
+import { generateProposalAction } from '@/app/actions/generateProposal';
+import { trackAccessAction } from '@/app/actions/trackAccess';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
+
+import {
+    Add, ContentCopy, Delete, Texture, Dashboard,
+    AutoAwesome, Save, Share, Download, ArrowUpward, ArrowDownward
+} from '@mui/icons-material';
+import { SLIDE_COMPONENTS, SLIDE_LABELS } from '@/config/slideMappings';
 
 function EditorContent() {
-    const { data, updateMeta, setAiContext, updateData } = useProposal();
+    const { data, updateMeta, setAiContext, updateData, addSlide, removeSlide, duplicateSlide, addExtraContent, moveSlide } = useProposal();
     const [isGenerating, setIsGenerating] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [userName, setUserName] = useState<string>('');
     const searchParams = useSearchParams();
     const proposalId = searchParams.get('id');
-
-    // Resolve template dynamically
-    const templateId = (data.slides as any)?.templateId || 'default';
-    const template = getTemplateFn(templateId);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -57,20 +56,17 @@ function EditorContent() {
                 if (error) throw error;
 
                 if (proposal) {
-                    // Update data carefully to preserve defaults for missing sections
                     updateData({
                         meta: {
                             title: proposal.title,
                             companyName: proposal.company_name,
                             customUrl: proposal.custom_url,
                             date: proposal.date,
-                            // @ts-ignore
                             status: proposal.status
                         },
-                        slides: {
-                            ...data.slides, // Keep existing defaults/current state
-                            ...(proposal.content as any) // Override with loaded data
-                        },
+                        slides: Array.isArray(proposal.content)
+                            ? proposal.content
+                            : data.slides, // Fallback if data remains in old format (or you can map old object to new array here)
                         aiContext: proposal.ai_context || ''
                     });
                 }
@@ -87,30 +83,23 @@ function EditorContent() {
     }, [proposalId]);
 
     const handleGenerate = async () => {
-        if (!data.aiContext) return;
+        if (!data.aiContext.trim()) {
+            alert("Por favor, preencha o contexto para a IA antes de gerar a proposta.");
+            return;
+        }
+
         setIsGenerating(true);
         try {
             const result = await generateProposalAction(data.aiContext);
-
             if (result.success && result.data) {
-                // Merge generated slides with existing ones to preserve structure
-                updateData({
-                    meta: {
-                        ...data.meta,
-                        date: result.data.home?.date || data.meta.date
-                    },
-                    slides: {
-                        ...data.slides,
-                        ...result.data
-                    }
-                });
+                updateData({ slides: result.data });
+                alert("Proposta gerada com sucesso!");
             } else {
-                throw new Error(result.error || 'Falha ao gerar dados');
+                alert("Erro ao gerar proposta: " + (result.error || "Erro desconhecido"));
             }
         } catch (error) {
-            console.error("Error generating proposal:", error);
-            const errorMessage = error instanceof Error ? error.message : "Erro desconhecido";
-            alert(`Erro ao gerar proposta: ${errorMessage}. Verifique o console para mais detalhes.`);
+            console.error("Generate error:", error);
+            alert("Erro ao gerar proposta com IA.");
         } finally {
             setIsGenerating(false);
         }
@@ -153,7 +142,7 @@ function EditorContent() {
     const handleExportPDF = async () => {
         setIsExporting(true);
         try {
-            const slides = document.querySelectorAll('.swiper-slide');
+            const slides = document.querySelectorAll('.swiper-slide-content'); // Target content wrapper
             const pdf = new jsPDF({
                 orientation: 'landscape',
                 unit: 'px',
@@ -269,6 +258,22 @@ function EditorContent() {
                         />
                     </div>
 
+                    <div className="flex flex-col gap-2 border-t border-white/10 pt-4">
+                        <label className="text-xs uppercase tracking-wider text-white/40 font-bold">Adicionar Slide</label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {Object.entries(SLIDE_LABELS).map(([type, label]) => (
+                                <button
+                                    key={type}
+                                    onClick={() => addSlide(type)}
+                                    className="p-2 text-xs bg-white/5 hover:bg-white/10 rounded border border-white/10 text-left truncate"
+                                    title={label}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3 mt-4">
                         <button
                             onClick={handleGenerate}
@@ -319,30 +324,64 @@ function EditorContent() {
                     modules={[Mousewheel, Pagination]}
                     className="w-full h-full"
                 >
-                    {template.slides.map((slideConfig, index) => {
-                        const SlideComponent = slideConfig.component;
+                    {data.slides.map((slide, index) => {
+                        const SlideComponent = SLIDE_COMPONENTS[slide.type];
 
-                        // Handle Drilldown Slides (e.g. Weekly Details)
-                        if (slideConfig.drilldownKey) {
-                            const items = ((data.slides as any)[slideConfig.drilldownKey] as any[]) || [];
-                            return items.map((item, itemIdx) => {
-                                // Dynamic props based on known drilldown types
-                                const drilldownProps = slideConfig.drilldownKey === 'weeklyDetails'
-                                    ? { week: item }
-                                    : { data: item };
+                        if (!SlideComponent) return null;
 
-                                return (
-                                    <SwiperSlide key={`${slideConfig.name}-${item.id || itemIdx}`}>
-                                        <SlideComponent {...drilldownProps} editable={true} />
-                                    </SwiperSlide>
-                                );
-                            });
-                        }
-
-                        // Handle Standard Slides
                         return (
-                            <SwiperSlide key={`${slideConfig.name}-${index}`}>
-                                <SlideComponent editable={true} />
+                            <SwiperSlide key={slide.id}>
+                                <div className="relative w-full h-full group swiper-slide-content">
+                                    {/* Slide Toolbar */}
+                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => addExtraContent(slide.id, 'text')}
+                                            className="p-3 rounded-full bg-white/10 backdrop-blur hover:bg-white/20 text-white tooltip-left"
+                                            title="Adicionar Texto"
+                                        >
+                                            <Texture />
+                                        </button>
+                                        <div className="flex flex-col gap-1 mb-2 pb-2 border-b border-white/10">
+                                            <button
+                                                onClick={() => index > 0 && moveSlide(index, index - 1)}
+                                                disabled={index === 0}
+                                                className={`p-2 rounded-full backdrop-blur text-white tooltip-left transition-colors ${index === 0 ? 'bg-white/5 text-white/20 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20'}`}
+                                                title="Mover para cima"
+                                            >
+                                                <ArrowUpward fontSize="small" />
+                                            </button>
+                                            <button
+                                                onClick={() => index < data.slides.length - 1 && moveSlide(index, index + 1)}
+                                                disabled={index === data.slides.length - 1}
+                                                className={`p-2 rounded-full backdrop-blur text-white tooltip-left transition-colors ${index === data.slides.length - 1 ? 'bg-white/5 text-white/20 cursor-not-allowed' : 'bg-white/10 hover:bg-white/20'}`}
+                                                title="Mover para baixo"
+                                            >
+                                                <ArrowDownward fontSize="small" />
+                                            </button>
+                                        </div>
+                                        <button
+                                            onClick={() => duplicateSlide(slide.id)}
+                                            className="p-3 rounded-full bg-white/10 backdrop-blur hover:bg-white/20 text-white tooltip-left"
+                                            title="Duplicar Slide"
+                                        >
+                                            <ContentCopy />
+                                        </button>
+                                        <button
+                                            onClick={() => removeSlide(slide.id)}
+                                            className="p-3 rounded-full bg-red-500/20 backdrop-blur hover:bg-red-500/40 text-red-200 tooltip-left"
+                                            title="Remover Slide"
+                                        >
+                                            <Delete />
+                                        </button>
+                                    </div>
+
+                                    <SlideComponent
+                                        {...slide.content}
+                                        editable={true}
+                                        slideId={slide.id}
+                                        extraContent={slide.extraContent}
+                                    />
+                                </div>
                             </SwiperSlide>
                         );
                     })}
